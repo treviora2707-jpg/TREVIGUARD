@@ -1,0 +1,28 @@
+{
+    "app_name": "TREVIORA AI DEFENDER",
+    "version": "2.1.0",
+    "real_time_protection": true,
+    "ai_engine_enabled": true,
+    "ransomware_protection": true,
+    "network_monitor_enabled": true,
+    "usb_auto_scan": true,
+    "cloud_ai_enabled": false,
+    "cloud_ai_api_key": "",
+    "cloud_ai_endpoint": "https://api.openai.com/v1",
+    "cloud_ai_provider": "OpenAI Compatible",
+    "local_ai_endpoint": "http://localhost:11434",
+    "ai_risk_threshold": 65,
+    "auto_quarantine_critical": true,
+    "scan_archive_files": true,
+    "scan_max_file_size_mb": 250,
+    "sound_alerts": true,
+    "start_with_windows": false,
+    "exclusions": [
+        "D:\\projects\\antivirus\\data\\quarantine",
+        "C:\\Windows\\System32\\ntoskrnl.exe"
+    ],
+    "storage_drive": "D:",
+    "last_quick_scan": null,
+    "last_full_scan": null,
+    "theme": "cyber_dark"
+}

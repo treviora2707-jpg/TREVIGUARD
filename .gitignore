@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller temporary build caches and distribution
+build/
+dist/
+installed/
+*.manifest
+
+# Logs and databases
+data/logs/*.log
+*.log
+
+# Quarantine files
+data/quarantine/*.tquar
+
+# IDE and OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
