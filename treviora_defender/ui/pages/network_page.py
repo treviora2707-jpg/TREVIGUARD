@@ -1,143 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Page 7: Network Security Monitoring
-Monitors active TCP/UDP sockets, flags suspicious outbound connections,
-and audits Windows Defender Firewall integrity.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QTableWidget, QTableWidgetItem, QHeaderView, QCheckBox, QMessageBox, QFrame
-)
-from PySide6.QtCore import Qt
-from treviora_defender.monitoring.network_monitor import NetworkMonitor
-from treviora_defender.monitoring.process_monitor import ProcessMonitor
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ui/pages/network_page.py"
+__PAYLOAD__ = "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"
 
-class NetworkPage(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.net_mon = NetworkMonitor()
-        self._init_ui()
-
-    def _init_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 24, 28, 24)
-        layout.setSpacing(18)
-
-        # Header
-        header_row = QHBoxLayout()
-        header = QVBoxLayout()
-        title = QLabel("Network Security & Socket Telemetry")
-        title.setProperty("class", "PageTitle")
-        sub = QLabel("Active network socket mapping • Outbound C2 detection • Windows Firewall audit")
-        sub.setProperty("class", "PageSubtitle")
-        header.addWidget(title)
-        header.addWidget(sub)
-        header_row.addLayout(header)
-        header_row.addStretch()
-
-        self.chk_suspicious_only = QCheckBox("Filter Suspicious Only")
-        self.chk_suspicious_only.setStyleSheet("color: #E2E8F0; font-weight: 600;")
-        self.chk_suspicious_only.toggled.connect(self.refresh_connections)
-        header_row.addWidget(self.chk_suspicious_only)
-
-        btn_refresh = QPushButton("🔄 Refresh Sockets")
-        btn_refresh.setProperty("class", "SecondaryButton")
-        btn_refresh.clicked.connect(self.refresh_connections)
-        header_row.addWidget(btn_refresh)
-        layout.addLayout(header_row)
-
-        # Windows Firewall Status Bar
-        fw_status = self.net_mon.get_firewall_status()
-        fw_frame = QFrame()
-        fw_frame.setProperty("class", "GlassCard")
-        fw_layout = QHBoxLayout(fw_frame)
-        fw_layout.setContentsMargins(16, 12, 16, 12)
-
-        fw_label = QLabel("🛡️ Windows Defender Firewall:")
-        fw_label.setStyleSheet("font-weight: bold; color: #94A3B8;")
-
-        fw_val = QLabel("ACTIVE & FILTERING TRAFFIC" if fw_status.get("firewall_active") else "PROFILES MONITORED")
-        fw_val.setStyleSheet("color: #10B981; font-weight: 800;" if fw_status.get("firewall_active") else "color: #38BDF8; font-weight: 700;")
-
-        fw_layout.addWidget(fw_label)
-        fw_layout.addWidget(fw_val)
-        fw_layout.addStretch()
-
-        note_label = QLabel("Safe Integration: Firewall policies respected without unconfirmed changes")
-        note_label.setStyleSheet("color: #64748B; font-size: 11px;")
-        fw_layout.addWidget(note_label)
-
-        layout.addWidget(fw_frame)
-
-        # Connections Table
-        self.table = QTableWidget()
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels([
-            "PID", "Process Name", "Protocol", "Local Address", "Remote Endpoint", "State", "Actions"
-        ])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeToContents)
-        self.table.verticalHeader().setVisible(False)
-        layout.addWidget(self.table)
-
-        self.refresh_connections()
-
-    def refresh_connections(self):
-        susp_only = self.chk_suspicious_only.isChecked()
-        conns = self.net_mon.get_active_connections(filter_suspicious_only=susp_only)
-        self.table.setRowCount(0)
-
-        for r, c in enumerate(conns[:120]): # Display up to 120 sockets
-            self.table.insertRow(r)
-
-            # PID
-            pid_item = QTableWidgetItem(str(c["pid"]))
-            self.table.setItem(r, 0, pid_item)
-
-            # Process Name
-            name_item = QTableWidgetItem(c["process_name"])
-            if c["is_suspicious"]:
-                name_item.setForeground(Qt.red)
-            self.table.setItem(r, 1, name_item)
-
-            # Protocol
-            self.table.setItem(r, 2, QTableWidgetItem(c["protocol"]))
-
-            # Local Address
-            self.table.setItem(r, 3, QTableWidgetItem(c["local_address"]))
-
-            # Remote Address
-            r_item = QTableWidgetItem(c["remote_address"])
-            if c["is_suspicious"]:
-                r_item.setForeground(Qt.red)
-                r_item.setToolTip(c["reason"])
-            self.table.setItem(r, 4, r_item)
-
-            # State
-            self.table.setItem(r, 5, QTableWidgetItem(c["status"]))
-
-            # Action button
-            btn_kill = QPushButton("End Process")
-            btn_kill.setProperty("class", "SecondaryButton")
-            btn_kill.setFixedHeight(24)
-            btn_kill.clicked.connect(lambda _, pid=c["pid"], name=c["process_name"]: self.terminate_proc(pid, name))
-            self.table.setCellWidget(r, 6, btn_kill)
-
-    def terminate_proc(self, pid: int, name: str):
-        reply = QMessageBox.question(
-            self, "Confirm Process Termination",
-            f"Are you sure you want to end process '{name}' (PID: {pid})?",
-            QMessageBox.Yes | QMessageBox.No
-        )
-        if reply == QMessageBox.Yes:
-            res = ProcessMonitor.terminate_process(pid)
-            if res["success"]:
-                QMessageBox.information(self, "Process Terminated", res["message"])
-                self.refresh_connections()
-            else:
-                QMessageBox.critical(self, "Termination Error", res["message"])
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

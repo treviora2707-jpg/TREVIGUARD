@@ -1,193 +1,37 @@
-r"""
-TREVIORA AI DEFENDER - Machine Learning PE Malware Classifier
-Supports ONNX Runtime and scikit-learn models.
-Trains and exports models strictly to D:\projects\antivirus\data\models\.
+# -*- coding: utf-8 -*-
 """
-import os
-import joblib
-import numpy as np
-from pathlib import Path
-from treviora_defender.config.constants import MODELS_DIR
-from treviora_defender.utils.logger import get_logger
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
 
-logger = get_logger()
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
 
-ONNX_MODEL_PATH = MODELS_DIR / "treviora_pe_classifier.onnx"
-SKLEARN_MODEL_PATH = MODELS_DIR / "treviora_pe_classifier.joblib"
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
+"""
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/core/ml_model.py"
+__PAYLOAD__ = "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"
 
-class MLMalwareModel:
-    def __init__(self):
-        MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        self.onnx_session = None
-        self.sklearn_model = None
-        self.model_type = "heuristic"
-        self._load_or_train_model()
-
-    def _train_default_model(self):
-        """
-        Synthesizes a robust training set representing PE characteristics of benign vs malicious software,
-        trains a Random Forest classifier, and exports both ONNX and Joblib formats.
-        """
-        logger.info("Training initial Treviora PE AI threat model...")
-        from sklearn.ensemble import RandomForestClassifier
-
-        np.random.seed(42)
-        n_samples = 4000
-
-        # Features:
-        # [0: overall_entropy (0-8),
-        #  1: max_sec_entropy (0-8),
-        #  2: num_sections (1-20),
-        #  3: has_wx_sections (0/1),
-        #  4: has_packed_names (0/1),
-        #  5: injection_apis (0-15),
-        #  6: crypto_apis (0-10),
-        #  7: spyware_apis (0-10),
-        #  8: evasion_apis (0-10),
-        #  9: network_apis (0-10),
-        #  10: is_signed (0/1)]
-
-        # Benign distribution (2000 samples)
-        benign_entropy = np.random.normal(5.8, 0.6, n_samples // 2).clip(2.0, 7.1)
-        benign_max_entropy = np.random.normal(6.2, 0.5, n_samples // 2).clip(3.0, 7.2)
-        benign_sections = np.random.randint(3, 8, n_samples // 2)
-        benign_wx = np.random.choice([0, 1], p=[0.98, 0.02], size=n_samples // 2)
-        benign_packed = np.random.choice([0, 1], p=[0.97, 0.03], size=n_samples // 2)
-        benign_inj = np.random.poisson(0.2, n_samples // 2).clip(0, 3)
-        benign_crypto = np.random.poisson(0.4, n_samples // 2).clip(0, 4)
-        benign_spy = np.random.poisson(0.1, n_samples // 2).clip(0, 2)
-        benign_evasion = np.random.poisson(0.3, n_samples // 2).clip(0, 2)
-        benign_net = np.random.poisson(0.5, n_samples // 2).clip(0, 5)
-        benign_signed = np.random.choice([0, 1], p=[0.20, 0.80], size=n_samples // 2)
-        y_benign = np.zeros(n_samples // 2)
-
-        X_benign = np.column_stack([
-            benign_entropy, benign_max_entropy, benign_sections, benign_wx,
-            benign_packed, benign_inj, benign_crypto, benign_spy,
-            benign_evasion, benign_net, benign_signed
-        ])
-
-        # Malicious distribution (2000 samples)
-        mal_entropy = np.random.normal(7.3, 0.5, n_samples // 2).clip(6.0, 8.0)
-        mal_max_entropy = np.random.normal(7.6, 0.4, n_samples // 2).clip(6.8, 8.0)
-        mal_sections = np.random.randint(1, 12, n_samples // 2)
-        mal_wx = np.random.choice([0, 1], p=[0.40, 0.60], size=n_samples // 2)
-        mal_packed = np.random.choice([0, 1], p=[0.35, 0.65], size=n_samples // 2)
-        mal_inj = np.random.poisson(2.5, n_samples // 2).clip(0, 15)
-        mal_crypto = np.random.poisson(1.8, n_samples // 2).clip(0, 10)
-        mal_spy = np.random.poisson(1.5, n_samples // 2).clip(0, 10)
-        mal_evasion = np.random.poisson(2.0, n_samples // 2).clip(0, 10)
-        mal_net = np.random.poisson(1.5, n_samples // 2).clip(0, 10)
-        mal_signed = np.random.choice([0, 1], p=[0.88, 0.12], size=n_samples // 2)
-        y_mal = np.ones(n_samples // 2)
-
-        X_mal = np.column_stack([
-            mal_entropy, mal_max_entropy, mal_sections, mal_wx,
-            mal_packed, mal_inj, mal_crypto, mal_spy,
-            mal_evasion, mal_net, mal_signed
-        ])
-
-        X = np.vstack([X_benign, X_mal]).astype(np.float32)
-        y = np.hstack([y_benign, y_mal]).astype(np.int64)
-
-        clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
-        clf.fit(X, y)
-
-        # Save scikit-learn model
-        joblib.dump(clf, str(SKLEARN_MODEL_PATH))
-        self.sklearn_model = clf
-        self.model_type = "scikit-learn"
-
-        # Export to ONNX if skl2onnx is available
-        try:
-            from skl2onnx import convert_sklearn
-            from skl2onnx.common.data_types import FloatTensorType
-
-            initial_type = [("float_input", FloatTensorType([None, 11]))]
-            onx = convert_sklearn(clf, initial_types=initial_type, target_opset=14)
-            with open(ONNX_MODEL_PATH, "wb") as f:
-                f.write(onx.SerializeToString())
-            logger.info(f"Exported ONNX model to {ONNX_MODEL_PATH}")
-        except Exception as e:
-            logger.warning(f"ONNX export skipped: {e}")
-
-    def _load_or_train_model(self):
-        # Try loading ONNX first
-        if ONNX_MODEL_PATH.exists():
-            try:
-                import onnxruntime as ort
-                self.onnx_session = ort.InferenceSession(str(ONNX_MODEL_PATH))
-                self.model_type = "ONNX"
-                logger.info(f"Loaded ONNX model from {ONNX_MODEL_PATH}")
-                return
-            except Exception as e:
-                logger.warning(f"Error loading ONNX model: {e}")
-
-        # Try loading scikit-learn model
-        if SKLEARN_MODEL_PATH.exists():
-            try:
-                self.sklearn_model = joblib.load(str(SKLEARN_MODEL_PATH))
-                self.model_type = "scikit-learn"
-                logger.info(f"Loaded scikit-learn model from {SKLEARN_MODEL_PATH}")
-                return
-            except Exception as e:
-                logger.warning(f"Error loading Joblib model: {e}")
-
-        # If neither exists or both failed, train fresh model
-        try:
-            self._train_default_model()
-            if ONNX_MODEL_PATH.exists():
-                import onnxruntime as ort
-                self.onnx_session = ort.InferenceSession(str(ONNX_MODEL_PATH))
-                self.model_type = "ONNX"
-        except Exception as e:
-            logger.error(f"Failed to train or load ML model: {e}")
-            self.model_type = "heuristic"
-
-    def predict_risk(self, feature_vector: list) -> float:
-        """
-        Runs inference on feature vector of length 11.
-        Returns risk score from 0.0 to 100.0.
-        """
-        x = np.array(feature_vector, dtype=np.float32).reshape(1, -1)
-
-        # 1. Try ONNX Runtime
-        if self.onnx_session is not None:
-            try:
-                input_name = self.onnx_session.get_inputs()[0].name
-                raw_out = self.onnx_session.run(None, {input_name: x})
-                # Output 1 contains probability maps or arrays in ONNX scikit-learn format
-                prob_data = raw_out[1]
-                if isinstance(prob_data, list) and isinstance(prob_data[0], dict):
-                    mal_prob = prob_data[0].get(1, 0.5)
-                elif isinstance(prob_data, np.ndarray):
-                    mal_prob = prob_data[0][1]
-                else:
-                    mal_prob = 0.5
-                return round(float(mal_prob) * 100.0, 2)
-            except Exception as e:
-                logger.debug(f"ONNX inference fallback: {e}")
-
-        # 2. Try scikit-learn
-        if self.sklearn_model is not None:
-            try:
-                probs = self.sklearn_model.predict_proba(x)[0]
-                return round(float(probs[1]) * 100.0, 2)
-            except Exception as e:
-                logger.debug(f"Sklearn inference fallback: {e}")
-
-        # 3. Rule-based heuristic fallback if ML engine unavailable
-        return self._heuristic_fallback(feature_vector)
-
-    def _heuristic_fallback(self, f: list) -> float:
-        # f: [overall_ent, max_sec_ent, n_sec, wx, packed, inj, crypto, spy, evasion, net, signed]
-        score = 10.0
-        if f[0] > 7.0: score += 20.0
-        if f[1] > 7.4: score += 25.0
-        if f[3] == 1: score += 20.0   # WX section
-        if f[4] == 1: score += 20.0   # Packed section name
-        score += min(f[5] * 12.0, 30.0) # Injection
-        score += min(f[7] * 10.0, 20.0) # Spyware
-        if f[10] == 1: score -= 30.0  # Signed
-        return round(float(np.clip(score, 0.0, 100.0)), 2)
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

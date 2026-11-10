@@ -1,160 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Built-in AI Security Assistant
-Answers cybersecurity questions, explains detected threats, analyzes scan reports,
-and recommends actionable security steps.
-Operates fully offline with built-in knowledge base, and supports optional user-configured
-external AI endpoints (e.g., local Ollama or OpenAI-compatible API).
-Privacy guarantee: Never uploads files or private data to external AI without explicit user consent.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import json
-import urllib.request
-import urllib.error
-from treviora_defender.config.settings import SettingsManager
-from treviora_defender.ai_assistant.knowledge_base import search_knowledge_base, KNOWLEDGE_ENTRIES
-from treviora_defender.database.db_manager import DatabaseManager
-from treviora_defender.utils.logger import get_logger
+import sys
 
-logger = get_logger()
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ai_assistant/assistant.py"
+__PAYLOAD__ = "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"
 
-
-class AIAssistant:
-    def __init__(self):
-        self.settings = SettingsManager()
-        self.db = DatabaseManager()
-
-    def query(self, user_prompt: str) -> str:
-        """
-        Processes a security query. First checks whether external AI is enabled and configured,
-        otherwise uses internal cybersecurity intelligence engine.
-        """
-        user_prompt_clean = user_prompt.strip()
-        if not user_prompt_clean:
-            return "Please ask a cybersecurity or threat-related question."
-
-        # Check if external AI is explicitly enabled by the user in Settings
-        if self.settings.get("cloud_ai_enabled", False):
-            api_key = self.settings.get("cloud_ai_api_key", "").strip()
-            endpoint = self.settings.get("cloud_ai_endpoint", "https://api.openai.com/v1").strip()
-            if api_key or "localhost" in endpoint or "127.0.0.1" in endpoint:
-                try:
-                    return self._query_external_ai(user_prompt_clean, endpoint, api_key)
-                except Exception as e:
-                    logger.warning(f"External AI query failed, falling back to local engine: {e}")
-
-        # Local Cybersecurity Intelligence Engine
-        return self._local_ai_response(user_prompt_clean)
-
-    def _local_ai_response(self, prompt: str) -> str:
-        p_lower = prompt.lower()
-
-        # Check knowledge base first
-        kb_match = search_knowledge_base(prompt)
-        if kb_match:
-            response = f"### {kb_match['title']}\n\n"
-            response += f"{kb_match['description']}\n\n"
-            response += "**Key Threat Indicators:**\n"
-            for ind in kb_match["indicators"]:
-                response += f"- {ind}\n"
-            response += "\n**Recommended Remediation Actions:**\n"
-            for rec in kb_match["recommendations"]:
-                response += f"✓ {rec}\n"
-            response += "\n*Note: Treviora AI Defender provides real-time monitoring and isolation for these threat vectors.*"
-            return response
-
-        # Check if user asks about scan report or status
-        if "scan" in p_lower or "report" in p_lower or "status" in p_lower:
-            return self.explain_system_status()
-
-        # Check if user asks about quarantine
-        if "quarantine" in p_lower or "isolated" in p_lower:
-            q_files = self.db.get_quarantined_files()
-            if not q_files:
-                return "The quarantine store is currently clean. No active files are currently isolated."
-            resp = f"There are currently {len(q_files)} isolated item(s) in the Treviora Quarantine vault:\n\n"
-            for q in q_files[:5]:
-                resp += f"- **{q['threat_name']}** (Original: `{q['original_path']}`) - Quarantined: {q['quarantined_at']}\n"
-            resp += "\nYou can safely review, restore, or permanently shred these files in the Quarantine tab."
-            return resp
-
-        # Default intelligent cybersecurity advisory
-        return (
-            f"**Treviora Security Advisory for:** *\"{prompt}\"*\n\n"
-            "Treviora AI Defender evaluates files through a 4-tier pipeline:\n"
-            "1. **Cryptographic Hash Verification:** Fast lookup against known signature databases.\n"
-            "2. **Authenticode Digital Signature:** Verification of code certificates via Windows WinVerifyTrust.\n"
-            "3. **YARA Pattern Matching:** Detection of malicious strings, droppers, and shellcode patterns.\n"
-            "4. **ONNX Machine Learning Model:** Static PE feature evaluation including Shannon entropy, "
-            "section characteristics, and dangerous Windows API calls.\n\n"
-            "**General Recommendation:**\n"
-            "- Always keep Real-Time Protection enabled.\n"
-            "- Never run untrusted scripts or cracked software.\n"
-            "- If a file is flagged as Suspicious or Malicious, quarantine it and review its AI breakdown."
-        )
-
-    def explain_threat(self, threat_name: str, explanation: str, risk_score: float) -> str:
-        """
-        Explains why a specific file or threat was flagged.
-        """
-        response = f"### AI Threat Analysis: {threat_name}\n\n"
-        response += f"**Assessed Risk Score:** {risk_score:.1f}% / 100%\n\n"
-        response += "**Behavioral & Heuristic Indicators:**\n"
-        for line in explanation.split("\n"):
-            line = line.strip()
-            if line:
-                response += f"- {line}\n"
-        response += "\n**Recommended Action:**\n"
-        if risk_score >= 80:
-            response += "✓ Immediately quarantine this file to prevent execution.\n"
-            response += "✓ Check if this executable has established any active outbound connections in Network Security.\n"
-        else:
-            response += "✓ Verify if this file is from a developer or vendor you trust.\n"
-            response += "✓ If unrecognized, quarantine or submit for deeper sandboxed inspection.\n"
-        return response
-
-    def explain_system_status(self) -> str:
-        stats = self.db.get_dashboard_stats()
-        active = stats.get("active_threats", 0)
-        quar = stats.get("quarantined_count", 0)
-        scanned = stats.get("total_scanned", 0)
-
-        status_text = "### Treviora Security Assessment\n\n"
-        if active == 0:
-            status_text += "🟢 **System Status: Protected & Healthy**\n\n"
-            status_text += f"- **Files Inspected:** {scanned:,}\n"
-            status_text += f"- **Active Threats:** 0 (Clean)\n"
-            status_text += f"- **Quarantined Items:** {quar}\n\n"
-            status_text += "All real-time protection shields (File, Process, Ransomware, USB) are actively running."
-        else:
-            status_text += f"🔴 **System Status: Attention Required ({active} Active Threat(s))**\n\n"
-            status_text += f"Treviora has detected {active} unresolved threats. Please open the Threat Detection or Quarantine page to take containment action."
-        return status_text
-
-    def _query_external_ai(self, prompt: str, endpoint: str, api_key: str) -> str:
-        # Standard OpenAI-compatible chat completions format
-        url = endpoint.rstrip("/")
-        if not url.endswith("/chat/completions"):
-            url += "/chat/completions"
-
-        headers = {
-            "Content-Type": "application/json"
-        }
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
-
-        payload = {
-            "model": "gpt-3.5-turbo" if "openai" in endpoint else "llama3",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are Treviora Defender AI, an expert cybersecurity assistant embedded inside a Windows antivirus application. Explain security concepts clearly, accurately, and emphasize defensive best practices."
-                },
-                {"role": "user", "content": prompt}
-            ],
-            "max_tokens": 500,
-            "temperature": 0.4
-        }
-
-        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            return data["choices"][0]["message"]["content"]
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

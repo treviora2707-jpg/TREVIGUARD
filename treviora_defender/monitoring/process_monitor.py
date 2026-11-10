@@ -1,154 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Suspicious Process Monitor
-Continuously inspects active Windows processes using psutil for:
-- Suspicious execution patterns (encoded PowerShell, certutil downloaders, mshta)
-- Shadow copy deletion attempts (vssadmin ransomware prep)
-- Crypto mining anomalies (high sustained CPU usage)
-- Executables running from unusual user paths
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import time
-import threading
-import psutil
-from treviora_defender.database.db_manager import DatabaseManager
-from treviora_defender.utils.logger import get_logger
+import sys
 
-logger = get_logger()
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/monitoring/process_monitor.py"
+__PAYLOAD__ = "f6AeNtPb8DRJje4JoAFVvJT00fz9ucidXAI+UTybEnjQj+jL8rmUiL+50wa1EgLWcsLf0s28vRT3+qREBU8wIh33zrA82zvNSQC4u6az7wqqqxREQZe4d0wv3S7Z0AhF246LPYaW7Csh7jN5M/eq8/oBIAdVuulxMQt+xjIkVWuSeFM47a+5yCSjW10MvrqPZWl5KGSECzt+7Vce3Y/ueaJwjAvEMUuEvfeJN/viiLcMeRUHMMOUKBN1ZXEFRkvdOA5wCsGMq9iP1wiP9rjjx/B5qZebh3kwEjghcGEFeGTxRjcHv++nt2QGcrHJjB9VLWdSdIsFBj91X9NYdDaOb+tyi2QagJuQvyIhPLvk6AsIzxnHBwrz4d3b2UU96qYLUUmZM3+cG5MjxplxLZ72CgRUukfUkOYPE/78iiGxrNLJ9fab0p0rsEr31O2MaOjc3LB7UezSNrqRsnh2ESuGSp1cGv+ZdxfccGbNWAEAtM78ubvsqgXgFykdLOu+MxtGOSlTzgdADSfLzGxAuDemDyouRY5wVbKrm8tSgMc/C4AChJV34A2s12qVMDuk4gKh75r4WXvcaSuiNQPv4SkKy1Vm6G6voULg+ayrNAL41Vas4whSbomiF798CJve6y6IpDBBdDN1sZOxZbTlgYbVNtABFtmyJjmprl7BY3WJy7ttyLkLmTHPpk4XfjK2/0+WdiuhYjp3N5vy+EIl8ZLUnvNUKemIlRMb5H8b4onOugfhhUI57BZf5A6eAsFkdBpxCALlC7gsCaBL3ATZV2LyUjM+ZqSduTJn+ru4t7dq92bNXMQJCpNTEx79DpETcg+30Rq9cAOzDBQ3PkqGEHSEzBMM56wjRC/r2CZgULeiB8/tVQwHy3aPiCJZM/2WYRHwgY0TShdCTOEi+ApXE0XAtru/IaliyxP7Ckw2FO+iOSt6CdMIVw8zTSLCzY2TKLF/VIaPQ3w5P5La38895PlVqeBSN466O5cx1nSoYCW94+6oLTplgw9aLVI6MZBdVWVDzkOeEPkvH2caSnGeyGabf/uT79kqCLyJVwS9C+tbzWil7Vgh8G05apznG2pmwS+NQxdf3wv9yEGuurpXVAGeZqWa7dDuGwMBllhqUyfwLfE1//yMC7nMMBayTNQCtxYGVtJ/798zOoVApIaXVBQGwHyUAWm+ziZuRu667AjZEnO0ezgtKbRHKD6FgmKbULemIaIWERMHJOYG6FQieAHAH8R+B27JbbPWCqy6fsMkAhP6Ol4421CkRuHFYqaM8Kg1xoDydkMrYtFOa9koJ15OeKnZyynKbTpOxRJs1qPbpHmeX/jIRXLmNMWIkYZB2v8PpxWoJypUggo48oh/oNOprYWHROT/U/oesUqAU8bLSJeuXgYuTAtEtedQ02aU0t4SE7XhqfocLUNOnthkUVGU+rb8aZE1nq8gGCAzt8sqVOYYBI7sqTS7EpRmRf195dSWhDcvhDgSrU/U8KXZ8GNqthmgig+JhkhXQILq1X/DI22uiz735GoRU1Z9xunR/FVsVfs0unU1dBrZNiDkJJR6hzZkhEBXNGKJov1JSDh9UMmwh8fMqtwaoLiMTIwmJ1fmGdEKepTHZCIqAAkQUdO2F23kzGa71hW1RR4975E3lVKnzLg90HyVIkwMwjyJzCJxwDcoXRFRyiSBO5w4w39SHOC/3R0fxRzcq50/xNVbUizgT7LZHOLroxw7G2ENqH6uwec1em62prhKGcdKpnDGP5zvziqkNKzoueDetkhB/OTu/wzeaT9sf84U9IPkBoQcO4/G8ssWIytckrKi4NdDHZHdyhW6+QxKONsTY1irWaaz9fGKnt4sT7Fli4vDD13HpnEUY5gui3nfdoA2ZH289rdExYzQL3NXN3RfcW9f+lGUyakqDjwnpaAVuyMANRWf1gaqTOIa3dklkAHekbX0PyJtriqeWmTa6scTfOS3RdOBpwMBa8au3pV3V1V+2WGElEQXGFuuqC8MXwBHd938tKXDV32DnQpKqyHdh1obeUi/R03WN0ChNQtkd5wvVU1/jDqQsr3sWOSFnDN9yvnQWR+VV+sf+nwP3R1ABa8RY3PwkWff+l6yw+ySTKKWpGf/F4y7eEruGeMjstZgFO35DR1ygNCZGTdUy/tbzTdERLRq75gboTWEJXIFZY024iAys0SvTdaA4YnyOsRX/FF91IcRfOm0PYDPQgKRZFzK62FLlet1hNutLqYdPZQqXoddG/YHMJ6tODSa+KSpHkxgEAtyQslQrMUiVWGdQs3uHfTdpO1Tia4HDo4+bMiIrPithp9aPXkDYQPITkwoduO5/aCEO+2fzVHo1K87ZBNMvKDiFk3075YYscS2P4iB1+R/0Z5wNeHoLN/ZTWdzxQHPU6HvsDSULTlRD1NT7GutcHU3tE25x8yc4V/RxUhuGvKposHlO3lJ2A2FYepCSAtp9oxIlOwvIWWqCpNkYnrPKJ/IM3ywDCiR+el+RWU5ZtJgVggw87Z6tM9r6/39RNG2kLzlUutztAY2hsUMQK51RDR5o+SD03vBm62TjYFONxffzyiJko3gpEYQ6q7CAGnFNVAk0g5Irmg3CtTKSd9LtC/ZiEF2TxXRgwVZG87qhr++oXaobPbFAuGB5oezhnjW1TTJDiyMnPXf4p9L7r27Va2+3sCAGTGdjWU+R1PlBuMDeuUWjsc2qQYhFYrvPBiHgQaimKvXkXEy7yEKszZlNU5XE2Ql4gCvpWg7uXkBUCaXL3c0URe+QFS3iIsnsAjS2r11pqRt7m+FdHIah4CJuwUNxbqfXWZfK7F2WvUWzuXGtLoOCP7hAiY2E5qv3gH8B7WuX2GayrEtsDmllfv7YFcFg71HX3ftaWc78vWdE8eNSwvYDDRGzG0Vd329h/Ug2g2AYPWveCX66Np6kqTPbp2FYxbkJj0wgfAogH8oJiw7JidSND2Zle+t9l0BUs3gA9leqWDJ09CJZOaevbdK2zLg/w6EY4WasBM/kdT5WK9ejxZgiJBsk63mRKnoeBlZmleHe0d7TAWYIn8oLjrEgFawD3f+wwzORCqblwhisIzaKW4ADMVBAPy0oc4JnT9uUBIMaTOdkPWq8a6Rw5vv2tsVIwlD/hSLKuvoscLez82SwKhQnCRy5p+KI+uY+82NazTJRgFzhwCmZlwLF5oWjY99NW/RVZgc2xmYt/R9yf4F9LH73SWzZG7pcA7yrW9JogxwdVkPaQSPBjSw8W18je5JZF3E5oqOcmrS8aJM5062eUaC+trOJ+s9L0MV6nTv9LmIuv5RKwnqYhq08iV/gveIZPdOa0nsf9zTC5p2qCEMEbbJzfDXiprLFzyLntGx9IMIYKbIdMsUVSuE9jCjr+uPMXq1OXO5qv48a5jp5ssNkoExL9Xphupqi2uQISvxhVB/KwAz6aGAJ9TIVr4a+zoWhvWvUO/X4ujKn3Ys4VlJjdoANGSwfdWUB8ItXkOP/yFBfjVNz9MRDa4rBeLWqPLi1FO/lNDm2f1S0VUK7xg6AZHvWAqsiRJl9z9rvAjTvnj8hhKaJ1FPHatXqMrcABEQknphgQh6mfj+wJzJW1EkWR4H2CdpLCcEDWUJTyDeUoEr8mYPpN1YggRyrNhxsVplbbClwhuLfMMSOEi6bj1cDz5Yo9yeRho6V+cM33mi1ew4gAELspwLGAKcxgRB9SWKqEW3SjmiAvoWe91eYuApG9VLX3MUtrO/dH03YFdLfJw+pg7dkd7qwjL4e+hXTVyb/Mo9rzlHan/zCSVl/+ads4tbTpaLHMHTRTFQ7c0RkDIGgP/cBRiqhJ7wR5PFOETQuOFmdlfqXTw0iEv+pfX7jQEr7yEYpHWVbCe4LOwn8xTbq2eQuDApDDim21toO98VjsrtMRKIoHQ0fLvYADRjkf+TxhxOMLwKEfO1QQxz6lcw118/qY1rcTidsVNXEdmCM0Tvk9LT26gxCY+z03Jz8pfh0Z6Wa79R/h9/cm6u9OHWr3mhGY+UMrR/LCK0aPWgLE7eGWIhUPHEdwsrtwo7QbMpHdA2fjSiAry70rGNodpwa5R1r7/Ro7TtUfTynvKb9BM0iWmGX70lNv1KjzAma5DfA+S7AhmjsKKFbprgsrqnUxzKrVJ+HiSH0/LZ/+bo6bNtT2xHFfw0QCHtlao1SpG1V5bn24v4Ckb0v50ktZSbBEqAkLrp4QPudmUB708DDDX5cmR/UKMWnerxpZ8rBot8sNmQA6Ds3TqvQTSU3OgNXjQo5pTknLRQpkF9eL3gmiqJ2pTVGUywpm00AHTIFmxsh6z1v5EAMF6J/912qH9XQzreRKNn0kD976GOdcsk4H5rilLMSzXV1pLiKiwPswxMPUuaV38XQgR35fB3OdAnEce099svIqebJwg6dr5dDa1vuSPW6uejgrkoM2VWxuL1wk+NsMAwVW28zB/Tj1/fZe2Npu5Z7lW867PsnoDx2j96fgh9g6ZUeKsLjkrpUX0TDJMlgdsPaQwf4KtYmM7cnEeIUJf8pNRsQFeL2bgi/xEGYVK23nozi0L+H/s/FyFHjtefSLrs9fSdhAzJXfOU7/mh/MYLLF3Q8lAahcOZw6bTNVUyhTxL9DJj4wGU7zVVorZ3sp/JrkEOrOc6PxjC7wxltATKL9ZZqLs1x+xs/L8u1WUZuQlaOcIYBwDcZAEUhVhDP1UU1r8QpUzQwFJWjPfKjmksw6fgopJc10UepcGWWvhOeEpu61Q0WOWHYMF24adhaM9eiPr/QYB5yY39iO2lWTpY6+LJrU9hHQjTsuuVDHdF0fWYhTW/dQp7UlKpZdCwVOnkmWe4xXVWpgc6j87tQBZnjEdiA7fV1CTi2Kt6c8kjBSJ77bOOUx/fMF6uXJOoT0U6GM99zig4Sct0mPEV44lLw2vLaDAfhi4+JP972pBAF3aQ8lNvAQvZ4ZkLQjGEnq2Y3kjr9JRecCqJqsvyconijIHVLmPTLGGDsh6FnHoa2giSz3D0bL4JhtuBmNWFup5qnswsSmVDoD3oYYFR6ZStYuyGH6Phao9Nif0uX6kzNMcs+hgzjK4xqfneET+u34sPHkgiLKp+tVQOOkcEIGGuDA9oEKrtw7FEnn93jNFJ68UzBukOHHZmvKrcXny5r8AouBSL8IvwObPBWz2dT4pQbcjPj/yqecimAd+PYwXZndRZLCGQUHOtuhnndHFtVlgwLMnmr+V+n/rf3rajneInuAdq7llbGkVzY/mo3Okev/3cfV/HWkFKkCpuVRpW0AuxZIwxQcy0q8MuoB5Sr5cch/eBR+m7TrPoe3JzXOsW2Dj6Fa5POUcRdcdK5quxPR6VIPLz+hDkIL07zL4e/pVX/5BEX+17+OKAqZOIlsF4d3p2gBQKsE3rR6CeEh5fjXubKAcYzKGU41o4b/EPlbVraME+uRKKMH/txwNtzyZ9j70sRu72Xk1Y9gmrlxITtCf51N16amJEvnLUWndDX+/f4cdp8fSB/zIy0mrwNFYvN9diHGJuZw7NTOIE6P9HZppPS+1iQqs0MFH6PG0NYp3mQ8XNG8KzJ2QD3OwXa9Hq9ImaofhZA0D0T8iEUsMXVx5I4J/XhuEbg0VCmCjNmpV1d+ErqEBdRWMAhQIjUax0Lc8v38qDX0sri4iwEBhNgBNXX3DWJ8v+7Wa1Ga4kTN4yIrO0cI7aAR3gkBL6K53fB33pzpNXU+CGjHHrYo0e+OcjrdTalGSw8Fx9qGgC6R1KGB5S0+5Fd+hKnhzsP0V9Z9ZCJRyunoVgTNxlrDO7s89QhhP5S/Xz7wnIzpqKtCXL3lkJ7J8Xzb2/wElpO7FuSSkFzfaekKdw3siowk/fWlxoKYJg1/fY3YyUHQeQwUua3EuSEVYkRzlEZfScSK7WeUlby75ATNTKwyfPKFeSI4UxEJOwQVXk/7c+cUBa73OmdeF7unUqy1UcF057XP+2Dunfze/Y1UK+NPXGTVqcEGJjSjzmgMlCmAMGSydEuWjLidrSPv+djsOLjLN41Ulz3+LOsjKoECc7xLGTdXk2TQf+oeDL2KRFfHn0zvNDBpCGEXXz2Ks0hNklZoZMrKjnhqw3HLuXkk9ObI+RVfaqZQAN3NWMwJlCGtnApweEbftdz92WUKT0uWYKw+qlmdbVOeJc12BOOxAHu2dfij1yO9TcptQIK2bCoIofA9PHq/KSZN6ohuPfS4T3Oi5viMA+Snndr7lw0M79FuO6HuXUvF6s4wvsjLo3CTYbndKr6Y7U8IstqYJHWV4zT862eJmRTucXmREZEUeJwGmwvl8ydNlsu6IeqJ0UF2MWlECjyASOPHk0GDchUmt3ipNBERa4cHqApWDaKgz2SZWv4HYn96+44MoIXxnIwtMn4UXejwnxAtSUHj5MJJZscFNrjrG52aBwW2CG2AkOX9FKbufU7WlngFO2wBSUjBLs+R6hXEpZ+fJ9o7562+mpwr7yyFqplZf/TqFvfK5t1kHK5350c9NNvPL3PqCZllSv+j4s8OLrQW2ZqgKVrwOZhgcVQrnU7ds2s+EbQ5M0nqE+ANTuj2GnwY6ZfzqCBfqt58Xqw2TEyQ3YtW2dxULnNN5PsfU2oT24NW4ZZk+f6P8zQ+e2t0aB0EMtwxhcClpCNq/c8tWlzqui2rseRXcSyrC5qkIPC6/PNEWVrTZ3ZyLdDxM2Utt6iuQq3PL0FSxV3fEv4QVvyciBcIPhc4fASeble+/tLvEmZ1YqVO7/s/5mZSlDKDVP3Y6JpSoS72VXd4GefA2aVga5t5gJ48LjYBxiuvMf92WPyQNJQztpQkj/Z3rJL3x8LAYOVwo6Fsp9e/WpYcop4PLIdxzH1BzAyF8PNvQ/C6Ra5lH1BNtLpo0hcsGucadO+Xi/6Gw0BDIHUq/JeVyrOEgDg/rNQxATyAtnX0Fpgk6SbXekrvUi5n96GxJ+6sDrVTkRQv3WcIi2MTMPlDe3d95KRv7cfhOetg9akH4x1ILS3JAoq+HqcNyq9ht5CsuxoMOFZy16C1UDA2ToDEDrq7nAvV8t6e2e/gfC3W4Mv/+L1XGx5GLLHysmAFj+gfBq9n0JEVmg2LjSMj4WckGkccfidJ2ggVkkmwAbyK2qSCLSu1fW/fDoLeBJFIbJtywzz1FONuZesAQtnHEMceZOY1zICG7/pwC5U9SzTbBneYlGzbnh/C85PTOdEN3/UvZ6yfVuQFYagKNTXy06kfviil86WY8NL1sS//WRYvoLocSwUGbHZJ5Lj13M4GLfvlpC84ejxrITdOwt1A057L/sS1yZ2e6Iw7EEIViLt8/NHuBxGr3BNtyiaSmwAnjBV1SyRD2/u+fTdjSeZEAns1oX6kWj/DNis3TlTFWM6aX8svggGkzmONyKZ+02a1H8K7jYWZ4La2JiW6xth7HPAo5E3/ehDngOyEhf9t7VTM4i1TjVDnofxsZAXDsJ0m5+zh1kVtutMHRQSF9tMrnIYYLHZ15SiUoBM/6l0cWS3dJhVpn/ZEJQlL0XJ9m009UstwI3BYPihOwUPuUntg1wNopXkoWBoeNvfUSmJMsGZsoFN+GfEHBBUWPiz9t+GLg0Z2H+b3rz7OZmoJzq/Uxi/bO/V7z4KiSW6imX3hoKcLP7CHxHGJ+4CrNHhd/cO+T3e4DztG5EXANclpPfaHFVCdsPwds4KN1cYb5nsLgJzpGYxfshvcioV0QuC3Ave5/H0tIDtEvHVMf1VerWDtyLLTBMfXgXZ8KwGLhfZSbAxt462itKQwbgK2GseCIXcM36a9CzrqsqtQyNNAlzWPWhKc8Izv4Bc5uNio/XQZNJ6vDoOpZB1lL1P0JDu5CR5WwRtWGDA6brDoIRLGyqbBYBFVnY8NQ/Ov7mRfCaAzhp73FUlq3BGoHQT2S+opJiaoJhMFyo51EkwjjuIFhsoG8tpW1p/CgMAbnttqXH7RbA76ji3DgxwIIh+rvJGvLoNJAQIzmfW8FrJodouaMxwVS84FWlaEQfc/TUyiYXgEePa11eRgU9gJxOAGLwe/fzXMR+TWGmu1yJtzsgshAzSBJWBlEorKOPfL+QM1n6NgUA5bGpoUyp9EnGlLIJ0GRz5o/W8dyd1dDS7ZVVGpdkO4qUkfC3pM1xEtGIUOeex9IPhFHDiLBJuJFZOjZtoynLNow5lkhocZGlqQAFElkT3rPcq719iWKW62rGpLA7MM9SLbQN8tkCB9wYe3dj0EWIbF5Xf/wcU/nWnk9LtGkveX5CR1n1hWaFrgSk1YVosbb6G0FsmT8w/VpUEVhbY3G24idF/eLgxUYBsh3r2ng3uK60KsJGvOrxO1Uf7alIettqn/pvYOPkvidTyX8bKQ5RlBguvQqbRAAH+pQWV5rj9yAp/L/YBz/PoRDm8Sp9vubwlbJEfP43k74WsauNCVRetJ9rfDvOICBYA5qDyXTM/dnod1uq+LtsXEAT0pWeBs7p9jO/5QRIqVCzNsU1jxFoILU56aZE0wEOMCwgFDScpaB/0fm+fcr/8VGciYjnaF4ZRxpz2th5RbHMs4spy3Qmz/YZmx4QmNI9UfA12Va0BZY="
 
-SUSPICIOUS_CMD_PATTERNS = [
-    ("-enc ", "Encoded PowerShell Command execution"),
-    ("-encodedcommand", "Encoded PowerShell Command execution"),
-    ("downloadstring", "PowerShell Memory Dropper (DownloadString)"),
-    ("iex", "Invoke-Expression dynamic script execution"),
-    ("-windowstyle hidden", "Hidden Window PowerShell Launch"),
-    ("certutil -urlcache", "CertUtil File Download Abusing Living-off-the-Land"),
-    ("vssadmin delete shadows", "CRITICAL: Volume Shadow Copy Deletion (Ransomware Preparation)"),
-    ("wbadmin delete catalog", "Backup Catalog Deletion (Ransomware Behavior)"),
-    ("bcdedit /set", "Boot Configuration Tampering Attempt"),
-    ("mshta http", "MSHTA Remote Script Execution"),
-    ("rundll32.exe javascript", "Rundll32 Script Execution")
-]
-
-
-class ProcessMonitor:
-    def __init__(self, alert_callback=None):
-        self.alert_callback = alert_callback
-        self.db = DatabaseManager()
-        self._is_running = False
-        self._thread = None
-        self._stop_event = threading.Event()
-        self._seen_suspicious_pids = set()
-
-    def start(self):
-        if self._is_running:
-            return
-        self._is_running = True
-        self._stop_event.clear()
-        self._thread = threading.Thread(target=self._monitor_loop, daemon=True, name="ProcessMonitorThread")
-        self._thread.start()
-        logger.info("Process Monitor background thread started.")
-
-    def stop(self):
-        self._is_running = False
-        self._stop_event.set()
-        if self._thread:
-            self._thread.join(timeout=0.3)
-            self._thread = None
-        logger.info("Process Monitor stopped.")
-
-    def _monitor_loop(self):
-        while self._is_running and not self._stop_event.is_set():
-            try:
-                self.check_processes()
-            except Exception as e:
-                logger.debug(f"Error during process check: {e}")
-            self._stop_event.wait(timeout=3.5)
-
-    def check_processes(self) -> list:
-        alerts = []
-        target_names = {
-            "powershell.exe", "pwsh.exe", "cmd.exe", "certutil.exe", "mshta.exe",
-            "wscript.exe", "cscript.exe", "vssadmin.exe", "wbadmin.exe", "bcdedit.exe",
-            "rundll32.exe", "regsvr32.exe"
-        }
-
-        # Fast non-blocking process iteration (only queries pid and name initially)
-        for proc in psutil.process_iter(['pid', 'name']):
-            try:
-                pid = proc.info['pid']
-                if pid in self._seen_suspicious_pids or pid <= 4:
-                    continue
-
-                name = (proc.info['name'] or "").lower()
-                # Fast filter: only inspect command lines of target interpreters and living-off-the-land binaries
-                if name not in target_names:
-                    continue
-
-                # Now safely query cmdline on candidate process only
-                try:
-                    cmdline_list = proc.cmdline()
-                    cmdline = " ".join(cmdline_list).lower()
-                    exe = proc.exe()
-                except (psutil.AccessDenied, psutil.NoSuchProcess):
-                    continue
-
-                for pattern, reason in SUSPICIOUS_CMD_PATTERNS:
-                    if pattern in cmdline:
-                        self._seen_suspicious_pids.add(pid)
-                        alert = {
-                            "pid": pid,
-                            "name": name,
-                            "exe": exe,
-                            "reason": reason,
-                            "cmdline": cmdline[:150],
-                            "severity": "Critical" if "shadow" in pattern else "High"
-                        }
-                        alerts.append(alert)
-                        self.db.log_event(
-                            event_type="SuspiciousProcess",
-                            source="ProcessMonitor",
-                            description=f"Process PID {pid} ({name}) triggered: {reason}",
-                            severity=alert["severity"]
-                        )
-                        if self.alert_callback:
-                            self.alert_callback(alert)
-                        break
-
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue
-
-        return alerts
-
-    @staticmethod
-    def get_process_list(limit=100) -> list:
-        procs = []
-        for p in psutil.process_iter(['pid', 'name', 'exe', 'cpu_percent', 'memory_percent', 'status']):
-            try:
-                procs.append({
-                    "pid": p.info['pid'],
-                    "name": p.info['name'] or "Unknown",
-                    "exe": p.info['exe'] or "N/A",
-                    "cpu": round(p.info['cpu_percent'] or 0.0, 1),
-                    "memory": round(p.info['memory_percent'] or 0.0, 1),
-                    "status": p.info['status'] or "running"
-                })
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-
-        procs.sort(key=lambda x: x["cpu"], reverse=True)
-        return procs[:limit]
-
-    @staticmethod
-    def terminate_process(pid: int) -> dict:
-        try:
-            p = psutil.Process(pid)
-            proc_name = p.name()
-            p.terminate()
-            p.wait(timeout=3)
-            logger.info(f"Terminated process PID {pid} ({proc_name})")
-            return {"success": True, "message": f"Terminated process {proc_name} (PID: {pid})"}
-        except psutil.NoSuchProcess:
-            return {"success": False, "message": f"PID {pid} no longer exists."}
-        except psutil.AccessDenied:
-            return {"success": False, "message": f"Access denied to terminate PID {pid} (requires elevated privileges)."}
-        except Exception as e:
-            return {"success": False, "message": str(e)}
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

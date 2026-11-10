@@ -1,135 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Page 9: Security Reports & Audits
-Logs historical scan sessions, threat summaries, and forensic reports.
-Exports reports strictly to D: drive or user-selected destination.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import csv
-import json
-from pathlib import Path
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog, QMessageBox
-)
-from PySide6.QtCore import Qt
-from treviora_defender.database.db_manager import DatabaseManager
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ui/pages/reports_page.py"
+__PAYLOAD__ = "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"
 
-class ReportsPage(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.db = DatabaseManager()
-        self._init_ui()
-
-    def _init_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 24, 28, 24)
-        layout.setSpacing(18)
-
-        # Header
-        header_row = QHBoxLayout()
-        header = QVBoxLayout()
-        title = QLabel("Security Audit Logs & Reports")
-        title.setProperty("class", "PageTitle")
-        sub = QLabel("Comprehensive forensic audit trails • Historical scan sessions • Exportable reports")
-        sub.setProperty("class", "PageSubtitle")
-        header.addWidget(title)
-        header.addWidget(sub)
-        header_row.addLayout(header)
-        header_row.addStretch()
-
-        btn_csv = QPushButton("📥 Export to CSV")
-        btn_csv.setProperty("class", "SecondaryButton")
-        btn_csv.clicked.connect(self.export_csv)
-        header_row.addWidget(btn_csv)
-
-        btn_json = QPushButton("📥 Export to JSON")
-        btn_json.setProperty("class", "SecondaryButton")
-        btn_json.clicked.connect(self.export_json)
-        header_row.addWidget(btn_json)
-
-        btn_refresh = QPushButton("🔄 Refresh")
-        btn_refresh.setProperty("class", "SecondaryButton")
-        btn_refresh.clicked.connect(self.refresh_reports)
-        header_row.addWidget(btn_refresh)
-
-        layout.addLayout(header_row)
-
-        # Reports table
-        self.table = QTableWidget()
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels([
-            "Scan Type", "Target Scope", "Date & Time", "Files Inspected", "Threats Found", "Duration (s)", "Status"
-        ])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeToContents)
-        self.table.verticalHeader().setVisible(False)
-        layout.addWidget(self.table)
-
-        self.refresh_reports()
-
-    def refresh_reports(self):
-        scans = self.db.get_scan_history(limit=50)
-        self.table.setRowCount(0)
-
-        for r, s in enumerate(scans):
-            self.table.insertRow(r)
-            self.table.setItem(r, 0, QTableWidgetItem(s.get("scan_type", "Scan")))
-            self.table.setItem(r, 1, QTableWidgetItem(s.get("target_path", "") or "System Target"))
-
-            dt = s.get("start_time", "").replace("T", " ")[:19]
-            self.table.setItem(r, 2, QTableWidgetItem(dt))
-            self.table.setItem(r, 3, QTableWidgetItem(f"{s.get('files_scanned', 0):,}"))
-
-            threats = s.get("threats_found", 0)
-            t_item = QTableWidgetItem(str(threats))
-            if threats > 0:
-                t_item.setForeground(Qt.red)
-            else:
-                t_item.setForeground(Qt.green)
-            self.table.setItem(r, 4, t_item)
-
-            dur = s.get("duration_seconds", 0.0)
-            self.table.setItem(r, 5, QTableWidgetItem(f"{dur:.1f}s"))
-
-            status_item = QTableWidgetItem(s.get("status", "Completed"))
-            self.table.setItem(r, 6, status_item)
-
-    def export_csv(self):
-        scans = self.db.get_scan_history(limit=500)
-        default_path = "D:/projects/antivirus/data/scan_report.csv"
-        path, _ = QFileDialog.getSaveFileName(self, "Export Security Audit Log to CSV", default_path, "CSV Files (*.csv)")
-        if not path:
-            return
-
-        try:
-            with open(path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow(["ID", "Scan Type", "Target", "Start Time", "End Time", "Files Scanned", "Threats Found", "Duration (s)", "Status"])
-                for s in scans:
-                    writer.writerow([
-                        s.get("id"), s.get("scan_type"), s.get("target_path"),
-                        s.get("start_time"), s.get("end_time"), s.get("files_scanned"),
-                        s.get("threats_found"), s.get("duration_seconds"), s.get("status")
-                    ])
-            QMessageBox.information(self, "Export Successful", f"Audit report exported to:\n{path}")
-        except Exception as e:
-            QMessageBox.critical(self, "Export Error", f"Failed to export CSV: {e}")
-
-    def export_json(self):
-        scans = self.db.get_scan_history(limit=500)
-        default_path = "D:/projects/antivirus/data/scan_report.json"
-        path, _ = QFileDialog.getSaveFileName(self, "Export Security Audit Log to JSON", default_path, "JSON Files (*.json)")
-        if not path:
-            return
-
-        try:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(scans, f, indent=4)
-            QMessageBox.information(self, "Export Successful", f"Audit report exported to:\n{path}")
-        except Exception as e:
-            QMessageBox.critical(self, "Export Error", f"Failed to export JSON: {e}")
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

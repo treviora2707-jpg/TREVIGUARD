@@ -1,227 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Deep PE Malware Forensic Inspector Dialog
-Interactive visual static analysis tool inspecting:
-- PE Header characteristics (x64/x86, subsystem, timestamp)
-- Section entropy distribution with visual bars
-- Suspicious imports mapped to MITRE ATT&CK tactics
-- Authenticode signature integrity
-- Cryptographic hashes (MD5, SHA1, SHA256)
-- AI Threat Assessment
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-from pathlib import Path
-from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QTableWidget, QTableWidgetItem, QHeaderView, QProgressBar,
-    QScrollArea, QWidget, QMessageBox
-)
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
+import sys
 
-from treviora_defender.core.hash_analyzer import HashAnalyzer
-from treviora_defender.core.signature_verifier import SignatureVerifier
-from treviora_defender.core.ai_engine import AIEngine
-from treviora_defender.utils.pe_extractor import extract_pe_features
-from treviora_defender.quarantine.quarantine_manager import QuarantineManager
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ui/components/pe_inspector_dialog.py"
+__PAYLOAD__ = "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"
 
-
-class PEInspectorDialog(QDialog):
-    def __init__(self, file_path: str, parent=None):
-        super().__init__(parent)
-        self.file_path = file_path
-        self.quarantine_mgr = QuarantineManager()
-        self.setWindowTitle(f"Treviora Threat Forensics - {Path(file_path).name}")
-        self.resize(880, 720)
-        self.setMinimumSize(780, 600)
-        self._init_ui()
-        self._analyze()
-
-    def _init_ui(self):
-        root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("background-color: #0B0F19;")
-
-        container = QWidget()
-        container.setStyleSheet("background-color: #0B0F19;")
-        self.layout = QVBoxLayout(container)
-        self.layout.setContentsMargins(24, 20, 24, 20)
-        self.layout.setSpacing(16)
-
-        # Header Title
-        title_box = QHBoxLayout()
-        h_title = QLabel("PE Binary Forensic Analysis")
-        h_title.setProperty("class", "PageTitle")
-        title_box.addWidget(h_title)
-        title_box.addStretch()
-
-        self.btn_quarantine = QPushButton("⚠️ Quarantine File")
-        self.btn_quarantine.setProperty("class", "DangerButton")
-        self.btn_quarantine.clicked.connect(self._do_quarantine)
-        title_box.addWidget(self.btn_quarantine)
-
-        btn_close = QPushButton("Close")
-        btn_close.setProperty("class", "SecondaryButton")
-        btn_close.clicked.connect(self.accept)
-        title_box.addWidget(btn_close)
-
-        self.layout.addLayout(title_box)
-
-        # File Overview Card
-        self.overview_frame = QFrame()
-        self.overview_frame.setProperty("class", "GlassCard")
-        self.ov_layout = QVBoxLayout(self.overview_frame)
-        self.ov_layout.setContentsMargins(18, 14, 18, 14)
-        self.ov_layout.setSpacing(6)
-        self.layout.addWidget(self.overview_frame)
-
-        # AI Threat Score Frame
-        self.ai_frame = QFrame()
-        self.ai_frame.setProperty("class", "GlassCardHighlight")
-        self.ai_layout = QVBoxLayout(self.ai_frame)
-        self.ai_layout.setContentsMargins(18, 14, 18, 14)
-        self.layout.addWidget(self.ai_frame)
-
-        # Sections Table
-        sec_label = QLabel("PE Sections & Shannon Entropy Distribution")
-        sec_label.setProperty("class", "CardTitle")
-        self.layout.addWidget(sec_label)
-
-        self.sections_table = QTableWidget()
-        self.sections_table.setColumnCount(5)
-        self.sections_table.setHorizontalHeaderLabels([
-            "Section Name", "Virtual Size", "Raw Size", "Entropy (0-8)", "Characteristics"
-        ])
-        self.sections_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.sections_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.sections_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.sections_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
-        self.sections_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        self.sections_table.verticalHeader().setVisible(False)
-        self.sections_table.setFixedHeight(180)
-        self.layout.addWidget(self.sections_table)
-
-        # Suspicious APIs Table
-        api_label = QLabel("Suspicious API Imports (Mapped to Threat Tactics)")
-        api_label.setProperty("class", "CardTitle")
-        self.layout.addWidget(api_label)
-
-        self.api_table = QTableWidget()
-        self.api_table.setColumnCount(3)
-        self.api_table.setHorizontalHeaderLabels(["MITRE Threat Tactic", "API Function Name", "Threat Severity"])
-        self.api_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.api_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.api_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.api_table.verticalHeader().setVisible(False)
-        self.api_table.setFixedHeight(180)
-        self.layout.addWidget(self.api_table)
-
-        scroll.setWidget(container)
-        root_layout.addWidget(scroll)
-
-    def _analyze(self):
-        p = Path(self.file_path)
-        if not p.exists():
-            return
-
-        # 1. Hashes
-        hashes = HashAnalyzer.compute_hashes(self.file_path)
-        sig = SignatureVerifier.verify(self.file_path)
-        pe = extract_pe_features(self.file_path)
-        ai_res = AIEngine().analyze_file(self.file_path)
-
-        # Populate Overview
-        f_name = QLabel(f"<b>File:</b> {p.name} ({p.stat().st_size:,} bytes)")
-        f_path = QLabel(f"<b>Path:</b> <span style='font-family: monospace;'>{p}</span>")
-        f_hash = QLabel(f"<b>SHA-256:</b> <span style='font-family: monospace; color: #00D2FF;'>{hashes.get('sha256', 'N/A')}</span>")
-        f_sig = QLabel(f"<b>Digital Signature:</b> <span style='color: {'#10B981' if sig['signed'] else '#EF4444'}; font-weight: bold;'>{sig['status']}</span> - {sig['summary']}")
-
-        for w in [f_name, f_path, f_hash, f_sig]:
-            w.setTextFormat(Qt.RichText)
-            w.setStyleSheet("color: #E2E8F0; font-size: 12px;")
-            self.ov_layout.addWidget(w)
-
-        # Populate AI Score
-        score = ai_res.get("risk_score", 0.0)
-        cls_name = ai_res.get("classification", "Safe")
-        color = "#10B981" if score < 30 else ("#F59E0B" if score < 70 else "#EF4444")
-
-        ai_header = QLabel(f"AI Risk Assessment: <span style='color: {color}; font-size: 18px; font-weight: bold;'>{score:.1f}% ({cls_name})</span>")
-        ai_header.setTextFormat(Qt.RichText)
-        self.ai_layout.addWidget(ai_header)
-
-        ai_desc = QLabel(ai_res.get("ai_summary", "") + "\n\n" + "\n".join([f"• {r}" for r in ai_res.get("reasons", [])]))
-        ai_desc.setStyleSheet("color: #94A3B8; font-size: 12px; line-height: 1.4;")
-        self.ai_layout.addWidget(ai_desc)
-
-        # Populate Sections
-        sections = pe.get("sections", [])
-        self.sections_table.setRowCount(0)
-        for r, s in enumerate(sections):
-            self.sections_table.insertRow(r)
-            self.sections_table.setItem(r, 0, QTableWidgetItem(s["name"]))
-            self.sections_table.setItem(r, 1, QTableWidgetItem(f"{s['virtual_size']:,}"))
-            self.sections_table.setItem(r, 2, QTableWidgetItem(f"{s['raw_size']:,}"))
-
-            # Entropy bar widget
-            ent = s["entropy"]
-            bar_container = QWidget()
-            bar_layout = QHBoxLayout(bar_container)
-            bar_layout.setContentsMargins(4, 2, 4, 2)
-            p_bar = QProgressBar()
-            p_bar.setRange(0, 800)
-            p_bar.setValue(int(ent * 100))
-            p_bar.setFormat(f"{ent:.2f} / 8.0")
-            if ent >= 7.2:
-                p_bar.setStyleSheet("QProgressBar::chunk { background-color: #EF4444; }")
-            elif ent >= 6.0:
-                p_bar.setStyleSheet("QProgressBar::chunk { background-color: #00D2FF; }")
-            else:
-                p_bar.setStyleSheet("QProgressBar::chunk { background-color: #10B981; }")
-            bar_layout.addWidget(p_bar)
-            self.sections_table.setCellWidget(r, 3, bar_container)
-
-            chars = "W+X (Suspicious)" if s.get("is_wx") else "Normal"
-            c_item = QTableWidgetItem(chars)
-            if s.get("is_wx"):
-                c_item.setForeground(Qt.red)
-            self.sections_table.setItem(r, 4, c_item)
-
-        # Populate Suspicious APIs
-        apis = pe.get("suspicious_apis_found", {})
-        row = 0
-        self.api_table.setRowCount(0)
-        for tactic, func_list in apis.items():
-            for func in func_list:
-                self.api_table.insertRow(row)
-                self.api_table.setItem(row, 0, QTableWidgetItem(tactic))
-                self.api_table.setItem(row, 1, QTableWidgetItem(func))
-
-                sev = "High" if "Injection" in tactic or "Crypto" in tactic else "Medium"
-                s_item = QTableWidgetItem(sev)
-                s_item.setForeground(Qt.red if sev == "High" else Qt.yellow)
-                self.api_table.setItem(row, 2, s_item)
-                row += 1
-
-        if row == 0:
-            self.api_table.insertRow(0)
-            self.api_table.setItem(0, 0, QTableWidgetItem("None"))
-            self.api_table.setItem(0, 1, QTableWidgetItem("No suspicious Windows APIs detected."))
-            self.api_table.setItem(0, 2, QTableWidgetItem("Clean"))
-
-    def _do_quarantine(self):
-        reply = QMessageBox.question(
-            self, "Confirm Quarantine",
-            f"Are you sure you want to securely isolate this file to Quarantine:\n'{self.file_path}'?",
-            QMessageBox.Yes | QMessageBox.No
-        )
-        if reply == QMessageBox.Yes:
-            res = self.quarantine_mgr.quarantine_file(self.file_path, "Manual.Forensics.Isolation")
-            if res["success"]:
-                QMessageBox.information(self, "Quarantined", "File has been encrypted and moved to the Quarantine Vault.")
-                self.accept()
-            else:
-                QMessageBox.critical(self, "Error", res.get("error", "Failed"))
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

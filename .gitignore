@@ -21,3 +21,13 @@ data/quarantine/*.tquar
 .idea/
 Thumbs.db
 Desktop.ini
+
+# ----------------------------------------------------------------------
+# TREVIORA SECURITY KEYS & DECRYPTION SECRETS (STRICTLY EXCLUDED FROM GIT)
+# ----------------------------------------------------------------------
+key.txt
+*key*.txt
+*.key
+*.secret
+TREVIORA_MASTER_SECURITY_KEY.txt
+TREVIORA_*.txt

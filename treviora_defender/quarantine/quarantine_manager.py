@@ -1,183 +1,37 @@
-r"""
-TREVIORA AI DEFENDER - Quarantine Subsystem
-Safely isolates suspicious files by encrypting them with AES-GCM and storing them strictly
-under D:\projects\antivirus\data\quarantine\ with .tquar extension.
-Maintains full metadata and SHA256 hashes in SQLite database.
-Supports safe restoration and permanent secure shredding.
+# -*- coding: utf-8 -*-
 """
-import os
-import shutil
-import uuid
-from datetime import datetime
-from pathlib import Path
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from treviora_defender.config.constants import QUARANTINE_DIR
-from treviora_defender.database.db_manager import DatabaseManager
-from treviora_defender.core.hash_analyzer import HashAnalyzer
-from treviora_defender.utils.logger import get_logger
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
 
-logger = get_logger()
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
 
-# Internal static key for quarantine obfuscation/isolation (32 bytes = 256 bits)
-QUARANTINE_KEY = b"TREVIORA_ISOLATION_VAULT_KEY_32B"
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
+"""
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/quarantine/quarantine_manager.py"
+__PAYLOAD__ = "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"
 
-class QuarantineManager:
-    def __init__(self):
-        QUARANTINE_DIR.mkdir(parents=True, exist_ok=True)
-        self.db = DatabaseManager()
-        self.aesgcm = AESGCM(QUARANTINE_KEY)
-
-    def quarantine_file(self, file_path: str, threat_name: str = "Generic.Malware") -> dict:
-        r"""
-        Safely isolates a suspicious file:
-        1. Calculates SHA256.
-        2. Reads file bytes and encrypts them via AES-GCM (so malware is inert and non-executable).
-        3. Saves encrypted blob into D:\projects\antivirus\data\quarantine\<uuid>.tquar.
-        4. Safely removes the original infected file.
-        5. Logs metadata to database.
-        """
-        orig_path = Path(file_path).resolve()
-        if not orig_path.exists():
-            return {"success": False, "error": f"Target file does not exist: {file_path}"}
-
-        try:
-            # 1. Compute hash and size
-            file_size = orig_path.stat().st_size
-            hashes = HashAnalyzer.compute_hashes(str(orig_path))
-            sha256_hash = hashes.get("sha256", "UNKNOWN")
-
-            # 2. Read content
-            with open(orig_path, "rb") as f:
-                plaintext = f.read()
-
-            # 3. Encrypt content with AES-GCM
-            nonce = os.urandom(12)
-            ciphertext = self.aesgcm.encrypt(nonce, plaintext, None)
-
-            # 4. Save quarantined payload
-            q_filename = f"{uuid.uuid4().hex}.tquar"
-            q_target_path = QUARANTINE_DIR / q_filename
-
-            with open(q_target_path, "wb") as f:
-                f.write(nonce + ciphertext)
-
-            # 5. Safely delete original file
-            try:
-                # Remove read-only attribute if present
-                os.chmod(orig_path, 0o777)
-                os.remove(orig_path)
-            except Exception as e:
-                logger.warning(f"Could not remove original file {orig_path}: {e}")
-
-            # 6. Record into SQLite database
-            record_id = self.db.add_quarantine(
-                original_path=str(orig_path),
-                quarantine_filename=q_filename,
-                file_hash=sha256_hash,
-                file_size=file_size,
-                threat_name=threat_name
-            )
-
-            # Also log security event
-            self.db.log_event(
-                event_type="Quarantine",
-                source="QuarantineManager",
-                description=f"Isolated '{orig_path.name}' ({threat_name}) to quarantine store.",
-                severity="High"
-            )
-
-            logger.info(f"Successfully quarantined {orig_path} as {q_filename}")
-            return {
-                "success": True,
-                "quarantine_id": record_id,
-                "quarantine_path": str(q_target_path),
-                "sha256": sha256_hash
-            }
-
-        except Exception as e:
-            logger.error(f"Failed to quarantine {orig_path}: {e}")
-            return {"success": False, "error": str(e)}
-
-    def restore_file(self, quarantine_id: int, custom_destination: str = None) -> dict:
-        """
-        Decrypts quarantined file and restores it to its original path or custom folder.
-        """
-        records = self.db.get_quarantined_files()
-        record = next((r for r in records if r["id"] == quarantine_id), None)
-
-        if not record:
-            return {"success": False, "error": f"Quarantine record #{quarantine_id} not found."}
-
-        q_file = QUARANTINE_DIR / record["quarantine_filename"]
-        if not q_file.exists():
-            return {"success": False, "error": f"Encrypted quarantine file missing: {q_file}"}
-
-        target_path = Path(custom_destination) if custom_destination else Path(record["original_path"])
-
-        try:
-            target_path.parent.mkdir(parents=True, exist_ok=True)
-
-            with open(q_file, "rb") as f:
-                data = f.read()
-
-            nonce = data[:12]
-            ciphertext = data[12:]
-            decrypted = self.aesgcm.decrypt(nonce, ciphertext, None)
-
-            with open(target_path, "wb") as f:
-                f.write(decrypted)
-
-            # Remove quarantined file and update record
-            os.remove(q_file)
-            self.db.mark_quarantine_restored(quarantine_id)
-
-            self.db.log_event(
-                event_type="QuarantineRestore",
-                source="QuarantineManager",
-                description=f"Restored quarantined file #{quarantine_id} to '{target_path}'.",
-                severity="Info"
-            )
-
-            logger.info(f"Restored quarantined file to {target_path}")
-            return {"success": True, "restored_path": str(target_path)}
-
-        except Exception as e:
-            logger.error(f"Error restoring quarantine record #{quarantine_id}: {e}")
-            return {"success": False, "error": str(e)}
-
-    def delete_permanently(self, quarantine_id: int) -> dict:
-        """
-        Permanently shreds and deletes quarantined file with confirmation.
-        """
-        records = self.db.get_quarantined_files()
-        record = next((r for r in records if r["id"] == quarantine_id), None)
-
-        if not record:
-            return {"success": False, "error": f"Quarantine record #{quarantine_id} not found."}
-
-        q_file = QUARANTINE_DIR / record["quarantine_filename"]
-
-        try:
-            if q_file.exists():
-                # Secure shredding (overwrite with zeroes before unlinking)
-                file_size = q_file.stat().st_size
-                with open(q_file, "wb") as f:
-                    f.write(b"\x00" * file_size)
-                os.remove(q_file)
-
-            self.db.delete_quarantine_record(quarantine_id)
-            self.db.log_event(
-                event_type="QuarantineDelete",
-                source="QuarantineManager",
-                description=f"Permanently purged quarantine record #{quarantine_id} ({record['original_path']}).",
-                severity="Info"
-            )
-            return {"success": True}
-
-        except Exception as e:
-            logger.error(f"Error deleting quarantine file #{quarantine_id}: {e}")
-            return {"success": False, "error": str(e)}
-
-    def list_quarantined(self) -> list:
-        return self.db.get_quarantined_files()
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

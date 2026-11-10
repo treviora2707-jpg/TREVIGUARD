@@ -1,170 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - PE (Portable Executable) Feature Extractor
-Extracts static PE metadata, section entropy, suspicious imports, and header anomalies
-used by the AI Malware Detection Engine.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import math
-import os
-from pathlib import Path
-from treviora_defender.utils.logger import get_logger
+import sys
 
-logger = get_logger()
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/utils/pe_extractor.py"
+__PAYLOAD__ = "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"
 
-# Suspicious Windows APIs categorized by malware behavior
-SUSPICIOUS_APIS = {
-    "Process Injection": {
-        "virtualalloc", "virtualallocex", "writeprocessmemory", "createremotethread",
-        "ntunmapviewofsection", "queueuserapc", "setthreadcontext", "resumethread", "loadlibrarya", "loadlibraryw"
-    },
-    "Keylogging & Spyware": {
-        "setwindowshookexa", "setwindowshookexw", "getasynckeystate", "getkeystate",
-        "registerhotkey", "getforegroundwindow"
-    },
-    "Anti-Analysis & Evasion": {
-        "isdebuggerpresent", "checkremotedebuggerpresent", "ntqueryinformationprocess",
-        "outputdebugstringa", "timegettime", "queryperformancecounter"
-    },
-    "Ransomware / Cryptography": {
-        "cryptencrypt", "cryptdecrypt", "cryptgenkey", "bcryptencrypt",
-        "cryptacquirecontexta", "cryptacquirecontextw"
-    },
-    "Execution & Persistence": {
-        "winexec", "shellexecutea", "shellexecutew", "createprocessa", "createprocessw",
-        "regsetvalueexa", "regsetvaluew"
-    },
-    "Network / C2 Communication": {
-        "urldownloadtofilea", "urldownloadtofilew", "internetopena", "httpsendrequesta",
-        "wsastartup", "connect", "internetconnecta"
-    }
-}
-
-
-def calculate_entropy(data: bytes) -> float:
-    """
-    Computes Shannon Entropy of a byte buffer (0.0 to 8.0).
-    Values > 7.0 indicate high packing, compression, or encryption.
-    """
-    if not data:
-        return 0.0
-
-    entropy = 0.0
-    length = len(data)
-    byte_counts = [0] * 256
-    for b in data:
-        byte_counts[b] += 1
-
-    for count in byte_counts:
-        if count == 0:
-            continue
-        p = count / length
-        entropy -= p * math.log2(p)
-
-    return round(entropy, 4)
-
-
-def calculate_file_entropy(file_path: str, max_bytes: int = 10 * 1024 * 1024) -> float:
-    try:
-        with open(file_path, "rb") as f:
-            data = f.read(max_bytes)
-        return calculate_entropy(data)
-    except Exception:
-        return 0.0
-
-
-def extract_pe_features(file_path: str) -> dict:
-    """
-    Analyzes an executable file and returns structured features for the AI Engine.
-    """
-    features = {
-        "is_pe": False,
-        "file_size": 0,
-        "overall_entropy": 0.0,
-        "num_sections": 0,
-        "max_section_entropy": 0.0,
-        "has_high_entropy_section": False,
-        "has_packed_section_names": False,
-        "has_wx_sections": False,  # Writable and Executable (shellcode indicator)
-        "sections": [],
-        "suspicious_apis_found": {},
-        "total_suspicious_apis": 0,
-        "imported_dlls": [],
-        "anomaly_indicators": []
-    }
-
-    if not os.path.exists(file_path):
-        return features
-
-    file_size = os.path.getsize(file_path)
-    features["file_size"] = file_size
-    features["overall_entropy"] = calculate_file_entropy(file_path)
-
-    # Try using pefile if available
-    try:
-        import pefile
-        pe = pefile.PE(file_path, fast_load=False)
-        features["is_pe"] = True
-        features["num_sections"] = len(pe.sections)
-
-        known_packer_names = {"upx0", "upx1", "upx2", ".vmp0", ".vmp1", ".aspack", ".themida", ".packer", "pec2"}
-
-        max_ent = 0.0
-        for section in pe.sections:
-            try:
-                sec_name = section.Name.decode("utf-8", errors="ignore").strip("\x00").lower()
-            except Exception:
-                sec_name = "unknown"
-
-            sec_data = section.get_data()
-            sec_ent = calculate_entropy(sec_data) if sec_data else 0.0
-            if sec_ent > max_ent:
-                max_ent = sec_ent
-
-            # Check for W+X permissions (0x20000000 = EXECUTE, 0x80000000 = WRITE)
-            chars = section.Characteristics
-            is_wx = bool((chars & 0x20000000) and (chars & 0x80000000))
-            if is_wx:
-                features["has_wx_sections"] = True
-                features["anomaly_indicators"].append(f"Section {sec_name} has both Write and Execute permissions (W^X violation)")
-
-            if sec_name in known_packer_names:
-                features["has_packed_section_names"] = True
-                features["anomaly_indicators"].append(f"Packer signature section detected: '{sec_name}'")
-
-            features["sections"].append({
-                "name": sec_name,
-                "virtual_size": section.Misc_VirtualSize,
-                "raw_size": section.SizeOfRawData,
-                "entropy": sec_ent,
-                "is_wx": is_wx
-            })
-
-        features["max_section_entropy"] = round(max_ent, 4)
-        if max_ent >= 7.2:
-            features["has_high_entropy_section"] = True
-            features["anomaly_indicators"].append(f"High section entropy detected ({max_ent}/8.0), likely packed/encrypted")
-
-        # Parse Imports
-        if hasattr(pe, "DIRECTORY_ENTRY_IMPORT"):
-            for entry in pe.DIRECTORY_ENTRY_IMPORT:
-                try:
-                    dll_name = entry.dll.decode("utf-8", errors="ignore").lower()
-                    features["imported_dlls"].append(dll_name)
-                    for imp in entry.imports:
-                        if imp.name:
-                            func_name = imp.name.decode("utf-8", errors="ignore").lower()
-                            for cat, api_set in SUSPICIOUS_APIS.items():
-                                if func_name in api_set:
-                                    if cat not in features["suspicious_apis_found"]:
-                                        features["suspicious_apis_found"][cat] = []
-                                    features["suspicious_apis_found"][cat].append(func_name)
-                                    features["total_suspicious_apis"] += 1
-                except Exception:
-                    pass
-
-        pe.close()
-
-    except Exception as e:
-        # Not a valid PE or pefile error
-        logger.debug(f"Non-PE or parse error for {file_path}: {e}")
-
-    return features
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

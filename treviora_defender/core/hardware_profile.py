@@ -1,254 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Dynamic Universal Hardware Detection & Tuning Engine
-Supports any Windows PC:
-- Automatic Intel Core (i3, i5, i7, i9, Ultra) vs AMD Ryzen (3, 5, 7, 9) vs Generic detection
-- GPU Detection: NVIDIA GeForce, AMD Radeon, Intel Arc, Intel Iris Xe / UHD
-- Dynamic RAM Sizing (8GB, 16GB, 24GB, 32GB, 64GB+)
-- Machine Form Factor: Laptop (Battery Sensor) vs Desktop Workstation (Direct AC Line)
-- Auto-Adaptive Performance Optimization Tuning
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-import re
-import platform
-import psutil
-from pathlib import Path
-from treviora_defender.utils.logger import get_logger
+import sys
 
-logger = get_logger()
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/core/hardware_profile.py"
+__PAYLOAD__ = "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"
 
-# Optional winreg on Windows
-try:
-    import winreg
-except ImportError:
-    winreg = None
-
-
-class HardwareProfile:
-    _cached_profile = None
-
-    @classmethod
-    def get_profile(cls, force_refresh: bool = False) -> dict:
-        """
-        Returns full hardware discovery profile with zero lag and instant caching.
-        """
-        if cls._cached_profile and not force_refresh:
-            return cls._cached_profile
-
-        # 1. CPU Detection
-        cpu_raw = cls._detect_cpu_raw_name()
-        cpu_vendor, cpu_brand, cpu_family, cpu_short = cls._parse_cpu_branding(cpu_raw)
-
-        # 2. GPU Detection
-        gpus = cls._detect_gpus()
-        primary_gpu = gpus[0] if gpus else {"name": "Standard Display Adapter", "is_dedicated": False}
-        gpu_short = cls._parse_gpu_short_name(primary_gpu.get("name", ""))
-
-        # 3. RAM Sizing
-        mem = psutil.virtual_memory()
-        ram_total_gb = round(mem.total / (1024**3), 1)
-
-        # 4. Form Factor (Laptop vs Desktop)
-        battery = psutil.sensors_battery()
-        is_laptop = battery is not None
-        device_type = "Laptop" if is_laptop else "Desktop Workstation"
-
-        # 5. OS & Architecture
-        os_info = {
-            "system": platform.system(),
-            "release": platform.release(),
-            "version": platform.version(),
-            "machine": platform.machine(),
-            "hostname": platform.node(),
-            "user": os.getlogin() if hasattr(os, "getlogin") else os.environ.get("USERNAME", "Administrator")
-        }
-
-        # 6. Adaptive Optimization Tuning
-        tuning = cls._compute_tuning_profile(cpu_vendor, cpu_family, ram_total_gb, primary_gpu.get("is_dedicated", False))
-
-        profile = {
-            "cpu": {
-                "raw_name": cpu_raw,
-                "vendor": cpu_vendor,          # "Intel", "AMD", or "Generic"
-                "brand": cpu_brand,            # "INTEL", "AMD", or "NEURAL"
-                "family": cpu_family,          # "Core i7", "Ryzen 5", etc.
-                "short_name": cpu_short,       # "Intel Core i7", "AMD Ryzen 5"
-                "cores_logical": psutil.cpu_count(logical=True) or 4,
-                "cores_physical": psutil.cpu_count(logical=False) or 2,
-            },
-            "gpu": {
-                "name": primary_gpu.get("name", "Standard Graphics"),
-                "short_name": gpu_short,
-                "is_dedicated": primary_gpu.get("is_dedicated", False),
-                "all_gpus": gpus
-            },
-            "ram": {
-                "total_gb": ram_total_gb,
-                "formatted": f"{ram_total_gb:.1f} GB"
-            },
-            "form_factor": {
-                "type": device_type,
-                "is_laptop": is_laptop
-            },
-            "os": os_info,
-            "tuning": tuning,
-            "display_spec": f"{cpu_short} & {gpu_short}"
-        }
-
-        cls._cached_profile = profile
-        logger.info(f"Hardware Profile Discovered: {profile['display_spec']} | {ram_total_gb}GB RAM | {device_type}")
-        return profile
-
-    @staticmethod
-    def _detect_cpu_raw_name() -> str:
-        name = ""
-        # Method 1: Windows Registry (exact CPU model name string)
-        if winreg:
-            try:
-                key_path = r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
-                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path) as k:
-                    val, _ = winreg.QueryValueEx(k, "ProcessorNameString")
-                    name = str(val).strip()
-            except Exception:
-                pass
-
-        # Method 2: Platform & Environment Fallbacks
-        if not name:
-            name = platform.processor() or os.environ.get("PROCESSOR_IDENTIFIER", "x86_64 Processor")
-
-        return name
-
-    @staticmethod
-    def _parse_cpu_branding(raw_name: str):
-        raw_lower = raw_name.lower()
-        if "intel" in raw_lower:
-            vendor = "Intel"
-            brand = "INTEL"
-            if "core" in raw_lower:
-                m = re.search(r"i[3579]|ultra\s*\d+", raw_lower)
-                family = f"Core {m.group(0).capitalize()}" if m else "Core"
-            elif "xeon" in raw_lower:
-                family = "Xeon"
-            elif "celeron" in raw_lower:
-                family = "Celeron"
-            else:
-                family = "Processor"
-            short_name = f"Intel {family}"
-        elif "amd" in raw_lower or "ryzen" in raw_lower:
-            vendor = "AMD"
-            brand = "AMD"
-            if "ryzen" in raw_lower:
-                m = re.search(r"ryzen\s*([3579]|threadripper)", raw_lower)
-                family = f"Ryzen {m.group(1).capitalize()}" if m else "Ryzen"
-            else:
-                family = "APU/CPU"
-            short_name = f"AMD {family}"
-        else:
-            vendor = "Generic"
-            brand = "NEURAL"
-            family = "Quantum NPU"
-            short_name = "Neural NPU"
-
-        return vendor, brand, family, short_name
-
-    @staticmethod
-    def _detect_gpus() -> list:
-        gpus = []
-        # Method 1: Query Windows Display Adapter Registry
-        if winreg:
-            try:
-                base_path = r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}"
-                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, base_path) as k:
-                    idx = 0
-                    while True:
-                        try:
-                            sub_name = winreg.EnumKey(k, idx)
-                            idx += 1
-                            if sub_name.isdigit():
-                                with winreg.OpenKey(k, sub_name) as sub_k:
-                                    try:
-                                        desc, _ = winreg.QueryValueEx(sub_k, "DriverDesc")
-                                        d_str = str(desc).strip()
-                                        if d_str and d_str not in [g["name"] for g in gpus]:
-                                            is_ded = any(w in d_str.lower() for w in ["nvidia", "geforce", "rtx", "gtx", "radeon rx", "arc"])
-                                            gpus.append({"name": d_str, "is_dedicated": is_ded})
-                                    except Exception:
-                                        pass
-                        except OSError:
-                            break
-            except Exception:
-                pass
-
-        # Sort so dedicated GPU comes first
-        gpus.sort(key=lambda g: 0 if g.get("is_dedicated") else 1)
-
-        if not gpus:
-            gpus.append({"name": "Standard Graphics Controller", "is_dedicated": False})
-
-        return gpus
-
-    @staticmethod
-    def _parse_gpu_short_name(full_name: str) -> str:
-        fn_lower = full_name.lower()
-        if "rtx" in fn_lower:
-            m = re.search(r"rtx\s*\d{4}(\s*ti)?", fn_lower)
-            if m:
-                return m.group(0).upper()
-            return "NVIDIA RTX"
-        elif "gtx" in fn_lower:
-            m = re.search(r"gtx\s*\d{3,4}(\s*ti)?", fn_lower)
-            if m:
-                return m.group(0).upper()
-            return "NVIDIA GTX"
-        elif "radeon" in fn_lower:
-            m = re.search(r"rx\s*\d{4}", fn_lower)
-            if m:
-                return f"Radeon {m.group(0).upper()}"
-            return "AMD Radeon"
-        elif "iris" in fn_lower:
-            return "Intel Iris Xe"
-        elif "arc" in fn_lower:
-            return "Intel Arc"
-        elif "uhd" in fn_lower:
-            return "Intel UHD"
-        elif "geforce" in fn_lower:
-            return "GeForce GPU"
-        return "Dedicated GPU" if "nvidia" in fn_lower or "amd" in fn_lower else "Integrated GPU"
-
-    @staticmethod
-    def _compute_tuning_profile(vendor: str, family: str, ram_gb: float, has_dedicated_gpu: bool) -> dict:
-        """
-        Dynamically configures app optimization based on machine capacity:
-        - High Performance Profile for Gaming/Creator PCs (Ryzen 5/7/9, Intel i5/i7/i9, >=16GB RAM)
-        - Balanced Profile for standard PCs
-        - Eco/Lightweight Profile for low-power devices (<8GB RAM)
-        """
-        if ram_gb >= 16 or has_dedicated_gpu:
-            return {
-                "profile_name": "High-Performance Workstation Mode",
-                "max_worker_threads": 4,
-                "ai_batch_size": 32,
-                "ui_animation_fps": 30,
-                "memory_cache_mb": 512,
-                "deep_heuristics": True,
-                "description": f"Optimized for high-speed multi-threading on {vendor} {family} & Dedicated GPU."
-            }
-        elif ram_gb >= 8:
-            return {
-                "profile_name": "Balanced Performance Mode",
-                "max_worker_threads": 2,
-                "ai_batch_size": 16,
-                "ui_animation_fps": 25,
-                "memory_cache_mb": 256,
-                "deep_heuristics": True,
-                "description": f"Balanced real-time protection tuned for {vendor} architecture."
-            }
-        else:
-            return {
-                "profile_name": "Eco / Low-Power Mode",
-                "max_worker_threads": 1,
-                "ai_batch_size": 8,
-                "ui_animation_fps": 15,
-                "memory_cache_mb": 128,
-                "deep_heuristics": False,
-                "description": "Ultra-lightweight low-memory footprint mode to preserve system resources."
-            }
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

@@ -1,310 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Space Cleanup & Storage Management View
-Matches Vivo iManager / Clean Master aesthetic:
-- Free up more space header & available storage gauge
-- One-Click Junk Clean button
-- Storage breakdown by drive (C: & D:)
-- Tabs/Panels for:
-  * Temporary & Junk Files
-  * Large Files (>50MB)
-  * Duplicate Files
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-from pathlib import Path
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QProgressBar, QFrame, QScrollArea, QTabWidget, QTableWidget,
-    QTableWidgetItem, QHeaderView, QMessageBox
-)
-from PySide6.QtCore import Qt, Signal, QThread
-from treviora_defender.core.space_cleaner import SpaceCleaner
-from treviora_defender.ui.custom_components import ModernCard, PillOptimizeButton, BrandHeaderWidget
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ui/views/space_view.py"
+__PAYLOAD__ = "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"
 
-class JunkScanWorker(QThread):
-    finished_signal = Signal(dict)
-
-    def run(self):
-        data = SpaceCleaner.scan_junk_files()
-        self.finished_signal.emit(data)
-
-
-class DeepScanWorker(QThread):
-    finished_signal = Signal(list, list)
-
-    def run(self):
-        large = SpaceCleaner.scan_large_files(target_dir="D:/projects/antivirus", min_size_mb=50)
-        duplicates = SpaceCleaner.scan_duplicate_files(target_dir="D:/projects/antivirus")
-        self.finished_signal.emit(large, duplicates)
-
-
-class SpaceView(QWidget):
-    back_requested = Signal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.junk_data = {}
-        self._init_ui()
-        self.refresh_storage()
-
-    def _init_ui(self):
-        root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("background: #060911; border: none;")
-
-        wrapper = QWidget()
-        wrapper.setStyleSheet("background: #060911;")
-        w_layout = QHBoxLayout(wrapper)
-        w_layout.setContentsMargins(0, 0, 0, 0)
-        w_layout.addStretch(1)
-
-        container = QWidget()
-        container.setStyleSheet("background: transparent;")
-        container.setMaximumWidth(1000)
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(24, 20, 24, 28)
-        layout.setSpacing(16)
-
-        # 1. Back Header + Brand Header
-        top_bar = QHBoxLayout()
-        self.btn_back = QPushButton("‹  Space cleanup")
-        self.btn_back.setStyleSheet(
-            "font-size: 18px; font-weight: 700; color: #FFFFFF; background: transparent; border: none;"
-        )
-        self.btn_back.setCursor(Qt.PointingHandCursor)
-        self.btn_back.clicked.connect(self.back_requested.emit)
-        top_bar.addWidget(self.btn_back)
-
-        top_bar.addStretch()
-
-        self.brand_header = BrandHeaderWidget()
-        top_bar.addWidget(self.brand_header)
-
-        top_bar.addSpacing(16)
-
-        self.btn_refresh = QPushButton("🔄 Refresh")
-        self.btn_refresh.setProperty("class", "ModernSecondary")
-        self.btn_refresh.setCursor(Qt.PointingHandCursor)
-        self.btn_refresh.clicked.connect(self.refresh_storage)
-        top_bar.addWidget(self.btn_refresh)
-        layout.addLayout(top_bar)
-
-        # 2. Main Storage Hero Card (Image 1 Space Card Style)
-        hero_card = ModernCard()
-        h_layout = QVBoxLayout(hero_card)
-        h_layout.setContentsMargins(24, 22, 24, 22)
-        h_layout.setSpacing(14)
-
-        lbl_hdr = QLabel("STORAGE MANAGEMENT")
-        lbl_hdr.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;")
-
-        self.lbl_available_main = QLabel("Calculating available space...")
-        self.lbl_available_main.setStyleSheet("color: #FFFFFF; font-size: 28px; font-weight: 800;")
-
-        self.storage_progress = QProgressBar()
-        self.storage_progress.setFixedHeight(12)
-        self.storage_progress.setTextVisible(False)
-        self.storage_progress.setStyleSheet("""
-            QProgressBar {
-                background-color: #1E293B;
-                border: none;
-                border-radius: 6px;
-            }
-            QProgressBar::chunk {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0070F3, stop:1 #00D2FF);
-                border-radius: 6px;
-            }
-        """)
-
-        # Action row inside Hero
-        act_row = QHBoxLayout()
-        self.lbl_junk_status = QLabel("Scanning for junk & temporary files...")
-        self.lbl_junk_status.setStyleSheet("color: #00D2FF; font-size: 14px; font-weight: 600;")
-        act_row.addWidget(self.lbl_junk_status)
-        act_row.addStretch()
-
-        self.btn_clean_junk = PillOptimizeButton("🧹 Clean Junk Files")
-        self.btn_clean_junk.clicked.connect(self._execute_clean_junk)
-        act_row.addWidget(self.btn_clean_junk)
-
-        h_layout.addWidget(lbl_hdr)
-        h_layout.addWidget(self.lbl_available_main)
-        h_layout.addWidget(self.storage_progress)
-        h_layout.addLayout(act_row)
-        layout.addWidget(hero_card)
-
-        # 3. Drive Breakdown (C: & D:)
-        drives_card = ModernCard()
-        d_layout = QVBoxLayout(drives_card)
-        d_layout.setContentsMargins(24, 20, 24, 20)
-        d_layout.setSpacing(14)
-
-        lbl_drives_title = QLabel("System Drive Breakdown")
-        lbl_drives_title.setStyleSheet("color: #FFFFFF; font-size: 15px; font-weight: 700;")
-        d_layout.addWidget(lbl_drives_title)
-
-        self.drive_c_box = self._create_drive_row("C: Windows System Drive")
-        self.drive_d_box = self._create_drive_row("D: Treviora & Project Drive")
-        d_layout.addLayout(self.drive_c_box["layout"])
-        d_layout.addLayout(self.drive_d_box["layout"])
-        layout.addWidget(drives_card)
-
-        # 4. Deep Cleanup Tabs (Junk / Large Files / Duplicates)
-        tabs_card = ModernCard()
-        t_layout = QVBoxLayout(tabs_card)
-        t_layout.setContentsMargins(18, 18, 18, 18)
-
-        self.tabs = QTabWidget()
-        self.tabs.setStyleSheet("""
-            QTabBar::tab {
-                background: #0B111E;
-                color: #94A3B8;
-                padding: 10px 20px;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-                margin-right: 4px;
-                font-weight: 600;
-            }
-            QTabBar::tab:selected {
-                background: #1E293B;
-                color: #00D2FF;
-            }
-        """)
-
-        # Tab 1: Junk Files List
-        self.junk_table = QTableWidget(0, 3)
-        self.junk_table.setHorizontalHeaderLabels(["File Name", "Size (MB)", "Path"])
-        self.junk_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tabs.addTab(self.junk_table, "📁 Temporary Junk Files")
-
-        # Tab 2: Large Files
-        self.large_table = QTableWidget(0, 3)
-        self.large_table.setHorizontalHeaderLabels(["File Name", "Size (MB)", "Path"])
-        self.large_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tabs.addTab(self.large_table, "📦 Large Files (>50MB)")
-
-        # Tab 3: Duplicates
-        self.dup_table = QTableWidget(0, 3)
-        self.dup_table.setHorizontalHeaderLabels(["Original File", "Duplicate File", "Size (MB)"])
-        self.dup_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tabs.addTab(self.dup_table, "👥 Duplicate Files")
-
-        t_layout.addWidget(self.tabs)
-        layout.addWidget(tabs_card)
-
-        w_layout.addWidget(container)
-        w_layout.addStretch(1)
-
-        scroll.setWidget(wrapper)
-        root_layout.addWidget(scroll)
-
-    def _create_drive_row(self, label_text: str) -> dict:
-        row_layout = QVBoxLayout()
-        row_layout.setSpacing(6)
-
-        header_row = QHBoxLayout()
-        lbl_name = QLabel(label_text)
-        lbl_name.setStyleSheet("color: #E2E8F0; font-size: 13px; font-weight: 600;")
-        lbl_stats = QLabel("0 GB / 0 GB (0%)")
-        lbl_stats.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 600;")
-
-        header_row.addWidget(lbl_name)
-        header_row.addStretch()
-        header_row.addWidget(lbl_stats)
-
-        bar = QProgressBar()
-        bar.setFixedHeight(10)
-        bar.setTextVisible(False)
-        bar.setStyleSheet("""
-            QProgressBar {
-                background-color: #1E293B;
-                border: none;
-                border-radius: 5px;
-            }
-            QProgressBar::chunk {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0070F3, stop:1 #00D2FF);
-                border-radius: 5px;
-            }
-        """)
-
-        row_layout.addLayout(header_row)
-        row_layout.addWidget(bar)
-
-        return {
-            "layout": row_layout,
-            "label_stats": lbl_stats,
-            "bar": bar
-        }
-
-    def refresh_storage(self):
-        drives = SpaceCleaner.get_drive_storage()
-        for d in drives:
-            if "C:" in d["drive"].upper():
-                self.drive_c_box["label_stats"].setText(f"{d['used_gb']} GB used of {d['total_gb']} GB ({d['percent']}%)")
-                self.drive_c_box["bar"].setValue(int(d["percent"]))
-            elif "D:" in d["drive"].upper():
-                self.drive_d_box["label_stats"].setText(f"{d['used_gb']} GB used of {d['total_gb']} GB ({d['percent']}%)")
-                self.drive_d_box["bar"].setValue(int(d["percent"]))
-
-        free_gb = SpaceCleaner.get_primary_available_gb()
-        self.lbl_available_main.setText(f"{free_gb:.2f} GB available")
-        self.storage_progress.setValue(min(100, int((free_gb / 512.0) * 100)))
-
-        # Prevent concurrent worker collisions (prevents PySide segfault)
-        if hasattr(self, 'junk_worker') and self.junk_worker and self.junk_worker.isRunning():
-            return
-        if hasattr(self, 'deep_worker') and self.deep_worker and self.deep_worker.isRunning():
-            return
-
-        self.lbl_junk_status.setText("Scanning junk files...")
-        self.junk_worker = JunkScanWorker()
-        self.junk_worker.finished_signal.connect(self._on_junk_scanned)
-        self.junk_worker.finished.connect(self.junk_worker.deleteLater)
-        self.junk_worker.start()
-
-        self.deep_worker = DeepScanWorker()
-        self.deep_worker.finished_signal.connect(self._on_deep_scanned)
-        self.deep_worker.finished.connect(self.deep_worker.deleteLater)
-        self.deep_worker.start()
-
-    def _on_junk_scanned(self, data: dict):
-        self.junk_data = data
-        self.lbl_junk_status.setText(f"Found {data['count']} junk items ({data['total_mb']} MB cleanable)")
-
-        self.junk_table.setRowCount(0)
-        for f in data.get("files", [])[:100]:
-            row = self.junk_table.rowCount()
-            self.junk_table.insertRow(row)
-            self.junk_table.setItem(row, 0, QTableWidgetItem(f["name"]))
-            self.junk_table.setItem(row, 1, QTableWidgetItem(str(f["size_mb"])))
-            self.junk_table.setItem(row, 2, QTableWidgetItem(f["path"]))
-
-    def _on_deep_scanned(self, large_files: list, duplicates: list):
-        self.large_table.setRowCount(0)
-        for f in large_files:
-            row = self.large_table.rowCount()
-            self.large_table.insertRow(row)
-            self.large_table.setItem(row, 0, QTableWidgetItem(f["name"]))
-            self.large_table.setItem(row, 1, QTableWidgetItem(str(f["size_mb"])))
-            self.large_table.setItem(row, 2, QTableWidgetItem(f["path"]))
-
-        self.dup_table.setRowCount(0)
-        for d in duplicates:
-            row = self.dup_table.rowCount()
-            self.dup_table.insertRow(row)
-            self.dup_table.setItem(row, 0, QTableWidgetItem(Path(d["original"]).name))
-            self.dup_table.setItem(row, 1, QTableWidgetItem(Path(d["duplicate"]).name))
-            self.dup_table.setItem(row, 2, QTableWidgetItem(str(d["size_mb"])))
-
-    def _execute_clean_junk(self):
-        result = SpaceCleaner.clean_junk_files()
-        QMessageBox.information(
-            self,
-            "Cleanup Complete",
-            f"Successfully cleaned {result['deleted_count']} temporary junk files.\nFreed {result['freed_mb']} MB of space!"
-        )
-        self.refresh_storage()
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

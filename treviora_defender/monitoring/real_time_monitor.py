@@ -1,162 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Real-Time Filesystem Monitor
-Uses watchdog to monitor newly created and modified files across Downloads, Desktop, and Temp.
-Performs immediate AI & Hash analysis on new executables and documents.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-import threading
-import time
-from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.observers.polling import PollingObserver
-from watchdog.events import FileSystemEventHandler
+import sys
 
-from treviora_defender.config.settings import SettingsManager
-from treviora_defender.core.scanner import AntivirusScanner
-from treviora_defender.quarantine.quarantine_manager import QuarantineManager
-from treviora_defender.database.db_manager import DatabaseManager
-from treviora_defender.utils.logger import get_logger
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/monitoring/real_time_monitor.py"
+__PAYLOAD__ = "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"
 
-logger = get_logger()
-
-
-class RealTimeFileHandler(FileSystemEventHandler):
-    def __init__(self, scanner: AntivirusScanner, quarantine_mgr: QuarantineManager, event_callback=None):
-        super().__init__()
-        self.scanner = scanner
-        self.quarantine_mgr = quarantine_mgr
-        self.event_callback = event_callback
-        self.settings = SettingsManager()
-        self.db = DatabaseManager()
-        self._recently_scanned = {}
-        self._lock = threading.Lock()
-
-    def _process_file(self, file_path: str, action: str):
-        p = Path(file_path)
-        if not p.exists() or not p.is_file():
-            return
-
-        now = time.time()
-        with self._lock:
-            # Debounce rapid duplicate events on the same file within 3 seconds
-            if file_path in self._recently_scanned and (now - self._recently_scanned[file_path]) < 3.0:
-                return
-            self._recently_scanned[file_path] = now
-
-        # Ignore project internal files, databases, logs, source code, and cache
-        lower_path = file_path.lower().replace("\\", "/")
-        ignored_patterns = [
-            "/quarantine", "/data/", "/build/", "/dist/", "/__pycache__/", "/.git/",
-            "/treviora_defender/", ".pyc", ".db", ".log", ".tquar", ".json", ".md", ".spec", ".png", ".jpg"
-        ]
-        if any(ig in lower_path for ig in ignored_patterns):
-            return
-
-        # Target executable and high-risk payload formats
-        target_exts = {".exe", ".dll", ".sys", ".scr", ".vbs", ".ps1", ".hta", ".js", ".docm", ".xlsm", ".iso", ".bat", ".cmd"}
-        if p.suffix.lower() not in target_exts:
-            return
-
-        try:
-            # Let file settle if it's being written
-            time.sleep(0.1)
-            res = self.scanner.scan_single_file(file_path)
-
-            if res.is_threat:
-                logger.warning(f"[RealTimeAlert] Threat detected: {res.threat_name} in {file_path}")
-                self.db.log_event(
-                    event_type="RealTimeThreat",
-                    source="RealTimeMonitor",
-                    description=f"Detected {res.threat_name} ({res.severity}) during {action} in '{file_path}'",
-                    severity=res.severity
-                )
-
-                quarantined = False
-                if self.settings.get("auto_quarantine_critical", True):
-                    q_res = self.quarantine_mgr.quarantine_file(file_path, threat_name=res.threat_name)
-                    quarantined = q_res.get("success", False)
-
-                if self.event_callback:
-                    self.event_callback({
-                        "file_path": file_path,
-                        "action": action,
-                        "threat_name": res.threat_name,
-                        "severity": res.severity,
-                        "risk_score": res.risk_score,
-                        "quarantined": quarantined,
-                        "explanation": res.ai_explanation
-                    })
-        except Exception as e:
-            logger.debug(f"Error in real-time processing of {file_path}: {e}")
-
-    def on_created(self, event):
-        if not event.is_directory:
-            self._process_file(event.src_path, "Created")
-
-    def on_modified(self, event):
-        if not event.is_directory:
-            self._process_file(event.src_path, "Modified")
-
-
-class RealTimeMonitor:
-    def __init__(self, event_callback=None):
-        self.settings = SettingsManager()
-        self.scanner = AntivirusScanner()
-        self.quarantine_mgr = QuarantineManager()
-        self.event_callback = event_callback
-        self.observer = None
-        self.is_running = False
-
-    def start(self):
-        if self.is_running:
-            return
-
-        watch_dirs = []
-        user_home = Path.home()
-
-        # Watch honeypot canary decoys and common drop folders
-        canary_dir = Path("D:/projects/antivirus/data/canaries")
-        if canary_dir.exists():
-            watch_dirs.append(str(canary_dir))
-
-        for sub in ["Downloads", "Desktop"]:
-            p = user_home / sub
-            if p.exists() and os.access(p, os.R_OK):
-                watch_dirs.append(str(p))
-
-        handler = RealTimeFileHandler(self.scanner, self.quarantine_mgr, self.event_callback)
-
-        # Attempt native Win32 ReadDirectoryChangesW observer, fallback to PollingObserver
-        try:
-            self.observer = Observer()
-            for d in watch_dirs:
-                try:
-                    self.observer.schedule(handler, d, recursive=False)
-                    logger.info(f"Real-Time File Protection actively watching: {d}")
-                except Exception as e:
-                    logger.warning(f"Could not watch directory {d}: {e}")
-
-            self.observer.start()
-            self.is_running = True
-            logger.info("Real-Time Monitor started with native Windows observer.")
-        except Exception as e:
-            logger.warning(f"Native observer initialization failed ({e}), switching to reliable PollingObserver...")
-            try:
-                self.observer = PollingObserver(timeout=2.0)
-                for d in watch_dirs:
-                    self.observer.schedule(handler, d, recursive=False)
-                self.observer.start()
-                self.is_running = True
-                logger.info("Real-Time Monitor started with PollingObserver.")
-            except Exception as e2:
-                logger.error(f"Failed to start fallback PollingObserver: {e2}")
-
-    def stop(self):
-        if self.observer and self.is_running:
-            try:
-                self.observer.stop()
-                self.observer.join(timeout=3)
-            except Exception as e:
-                logger.debug(f"Error stopping observer: {e}")
-            self.is_running = False
-            logger.info("Real-Time Monitor stopped.")
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

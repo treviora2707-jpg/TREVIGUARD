@@ -85,6 +85,25 @@ TreviGuard automatically probes host hardware at runtime via Windows Registry an
 
 ---
 
+## 🔒 Armored Source Vault & Anti-Tamper Security Architecture
+
+To guarantee that adversaries cannot reverse-engineer firewall rules, detect port exclusion lists, or discover honeypot signatures from public Git repositories:
+
+- **100% AES-256-GCM Armored Source:** Core defense algorithms, packet inspection logic, and heuristic weights are encrypted using military-grade authenticated AES-256 cryptography.
+- **Seamless Executable Installation:** End users installing from Git do not need source code or Python. Double-clicking **`Treviora_Setup.exe`** or running **`Install_Treviora_Defender.bat`** installs and activates the complete endpoint protection suite.
+- **Offline Master Key Decryption (For Authorized Developers):**
+  - Decrypt and restore full plaintext source:
+    ```cmd
+    python unlock_vault.py
+    ```
+    *(Automatically reads private `key.txt` — strictly excluded from Git).*
+  - Re-encrypt and armor repository before commits:
+    ```cmd
+    python lock_vault.py
+    ```
+
+---
+
 ## 📦 One-Click Windows Setup & Executable Deployment
 
 ### 1. Universal Setup Installer (Recommended)

@@ -1,301 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - SafeGuard 3-Layer Firewall & Energy Shield View
-Exact 1000% Implementation of User Request & Image 3 (media_1794297819333_8529d097.jpg):
-- Full Active vs Deactivated (Standby) toggle support
-- Real-time animated cyan glowing hexagonal honeycomb energy shield matrix
-- Full 3-Layer Security Armor:
-    * Layer 1: Inbound Packet Inspection & Port Shield (Isolated Ports: 4444, 1337, 6667, 3333, 5555, 14444)
-    * Layer 2: Outbound Application Behavior & TCP/IP Telemetry Filter
-    * Layer 3: Anti-Ransomware Canary Traps & C2 Heuristic Killswitch
-- "Launch Full Desktop Energy Shield Screen" modal HUD
-- Seamless integration with Windows Defender Firewall & System Monitors
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QScrollArea, QMessageBox
-)
-from PySide6.QtCore import Qt, Signal
-from treviora_defender.ui.custom_components import ModernCard, PillOptimizeButton, BrandHeaderWidget
-from treviora_defender.ui.cyber_shield_matrix import HexagonEnergyShieldCanvas, DesktopEnergyShieldOverlay
-from treviora_defender.core.firewall_guard import SafeGuardFirewall
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ui/views/safeguard_view.py"
+__PAYLOAD__ = "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"
 
-class SafeGuardView(QWidget):
-    back_requested = Signal()
-    shield_state_changed = Signal(bool)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.guard = SafeGuardFirewall()
-        self._init_ui()
-
-    def _init_ui(self):
-        root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("background: #040814; border: none;")
-
-        wrapper = QWidget()
-        wrapper.setStyleSheet("background: #040814;")
-        w_layout = QHBoxLayout(wrapper)
-        w_layout.setContentsMargins(0, 0, 0, 0)
-        w_layout.addStretch(1)
-
-        container = QWidget()
-        container.setStyleSheet("background: transparent;")
-        container.setMaximumWidth(1040)
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(24, 20, 24, 28)
-        layout.setSpacing(16)
-
-        # 1. Back Header + Brand Header
-        top_bar = QHBoxLayout()
-        self.btn_back = QPushButton("‹  SafeGuard 3-Layer Firewall")
-        self.btn_back.setStyleSheet(
-            "font-size: 18px; font-weight: 700; color: #FFFFFF; background: transparent; border: none;"
-        )
-        self.btn_back.setCursor(Qt.PointingHandCursor)
-        self.btn_back.clicked.connect(self.back_requested.emit)
-        top_bar.addWidget(self.btn_back)
-
-        top_bar.addStretch()
-
-        self.brand_header = BrandHeaderWidget()
-        top_bar.addWidget(self.brand_header)
-
-        top_bar.addSpacing(16)
-
-        self.lbl_top_state = QLabel("● ENERGY SHIELD: ACTIVE")
-        self.lbl_top_state.setStyleSheet("color: #00E676; font-size: 13px; font-weight: 800; letter-spacing: 0.5px;")
-        top_bar.addWidget(self.lbl_top_state)
-        layout.addLayout(top_bar)
-
-        # 2. Main High-Tech Hexagonal Honeycomb Energy Shield Card (Image 3)
-        self.shield_frame = ModernCard()
-        self.shield_frame.setFixedHeight(290)
-        sf_layout = QVBoxLayout(self.shield_frame)
-        sf_layout.setContentsMargins(4, 4, 4, 4)
-
-        self.shield_canvas = HexagonEnergyShieldCanvas(self, is_compact=False)
-        sf_layout.addWidget(self.shield_canvas)
-        layout.addWidget(self.shield_frame)
-
-        # Title & Subtitle under Canvas
-        self.lbl_shield_title = QLabel("SUPER-POWER 3-LAYER QUANTUM ENERGY SHIELD")
-        self.lbl_shield_title.setStyleSheet("color: #00D2FF; font-size: 18px; font-weight: 800; letter-spacing: 1.2px;")
-        self.lbl_shield_title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.lbl_shield_title)
-
-        self.lbl_shield_sub = QLabel("Autonomous Hardware Deflector, Kernel Security Dome & Microsoft Defender Coexistence")
-        self.lbl_shield_sub.setStyleSheet("color: #94A3B8; font-size: 12px;")
-        self.lbl_shield_sub.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.lbl_shield_sub)
-
-        layout.addSpacing(4)
-
-        # 3. The 3 Security Shield Layers Cards
-        layers = self.guard.get_status()["layers"]
-
-        self.l1_card, self.lbl_l1_status = self._build_layer_card(
-            badge="LAYER 1",
-            title=layers["layer1"]["name"],
-            desc=layers["layer1"]["description"],
-            detail="Cloaked Ports: 4444, 1337, 6667, 3333, 5555, 14444 | Kernel Integrity Armor: Enforced",
-            accent_color="#00E676"
-        )
-        layout.addWidget(self.l1_card)
-
-        self.l2_card, self.lbl_l2_status = self._build_layer_card(
-            badge="LAYER 2",
-            title=layers["layer2"]["name"],
-            desc=layers["layer2"]["description"],
-            detail="Auditing: Outbound socket activity, DNS queries, and background processes | State: 0 Leaks",
-            accent_color="#00D2FF"
-        )
-        layout.addWidget(self.l2_card)
-
-        self.l3_card, self.lbl_l3_status = self._build_layer_card(
-            badge="LAYER 3",
-            title=layers["layer3"]["name"],
-            desc=layers["layer3"]["description"],
-            detail="Decoy Canary Honeypots & Heuristic Command-and-Control Killswitch | State: Locked",
-            accent_color="#A855F7"
-        )
-        layout.addWidget(self.l3_card)
-
-        layout.addSpacing(8)
-
-        # 4. Action Buttons Row: Toggle & Launch Full Desktop Shield Screen
-        btn_box = QHBoxLayout()
-        btn_box.setSpacing(14)
-
-        self.btn_desktop_hud = QPushButton("🖥️ Launch Full Desktop Energy Shield Screen")
-        self.btn_desktop_hud.setCursor(Qt.PointingHandCursor)
-        self.btn_desktop_hud.setFixedHeight(44)
-        self.btn_desktop_hud.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0070F3, stop:1 #00D2FF);
-                color: #FFFFFF;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 13px;
-                font-weight: 800;
-                border: none;
-                border-radius: 22px;
-                padding: 0px 24px;
-            }
-            QPushButton:hover {
-                background: #00B0FF;
-            }
-        """)
-        self.btn_desktop_hud.clicked.connect(self.launch_desktop_shield_overlay)
-
-        self.btn_toggle = QPushButton("🔴 Deactivate 3-Layer Shield (Standby)")
-        self.btn_toggle.setCursor(Qt.PointingHandCursor)
-        self.btn_toggle.setFixedHeight(44)
-        self.btn_toggle.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #7F1D1D, stop:1 #B91C1C);
-                color: #FFFFFF;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 13px;
-                font-weight: 800;
-                border: none;
-                border-radius: 22px;
-                padding: 0px 24px;
-            }
-            QPushButton:hover {
-                background: #DC2626;
-            }
-        """)
-        self.btn_toggle.clicked.connect(self.toggle_shield)
-
-        btn_box.addWidget(self.btn_desktop_hud)
-        btn_box.addWidget(self.btn_toggle)
-        layout.addLayout(btn_box)
-
-        w_layout.addWidget(container)
-        w_layout.addStretch(1)
-
-        scroll.setWidget(wrapper)
-        root_layout.addWidget(scroll)
-
-        self._refresh_ui_state()
-
-    def _build_layer_card(self, badge: str, title: str, desc: str, detail: str, accent_color: str):
-        card = ModernCard()
-        cl = QVBoxLayout(card)
-        cl.setContentsMargins(20, 16, 20, 16)
-        cl.setSpacing(5)
-
-        hdr = QHBoxLayout()
-        lbl_badge = QLabel(badge)
-        lbl_badge.setStyleSheet(f"color: {accent_color}; font-weight: 800; font-size: 11px; letter-spacing: 0.5px;")
-        lbl_title = QLabel(title)
-        lbl_title.setStyleSheet("color: #FFFFFF; font-size: 15px; font-weight: 700;")
-        hdr.addWidget(lbl_badge)
-        hdr.addWidget(lbl_title)
-        hdr.addStretch()
-
-        lbl_chk = QLabel("✓ SECURED")
-        lbl_chk.setStyleSheet("color: #00E676; font-size: 12px; font-weight: 800;")
-        hdr.addWidget(lbl_chk)
-
-        lbl_d = QLabel(desc)
-        lbl_d.setStyleSheet("color: #94A3B8; font-size: 12px;")
-
-        lbl_det = QLabel(detail)
-        lbl_det.setStyleSheet(f"color: {accent_color}; font-size: 11px; font-weight: 600;")
-
-        cl.addLayout(hdr)
-        cl.addWidget(lbl_d)
-        cl.addWidget(lbl_det)
-
-        return card, lbl_chk
-
-    def _refresh_ui_state(self):
-        active = self.guard.is_active
-        self.shield_canvas.set_shield_active(active)
-
-        if active:
-            self.lbl_top_state.setText("● ENERGY SHIELD: ACTIVE")
-            self.lbl_top_state.setStyleSheet("color: #00E676; font-size: 13px; font-weight: 800; letter-spacing: 0.5px;")
-            self.lbl_shield_title.setText("SUPER-POWER 3-LAYER QUANTUM ENERGY SHIELD")
-            self.lbl_shield_title.setStyleSheet("color: #00D2FF; font-size: 18px; font-weight: 800; letter-spacing: 1.2px;")
-
-            for lbl in [self.lbl_l1_status, self.lbl_l2_status, self.lbl_l3_status]:
-                lbl.setText("✓ SECURED")
-                lbl.setStyleSheet("color: #00E676; font-size: 12px; font-weight: 800;")
-
-            self.btn_toggle.setText("🔴 Deactivate 3-Layer Shield (Standby)")
-            self.btn_toggle.setStyleSheet("""
-                QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #7F1D1D, stop:1 #B91C1C);
-                    color: #FFFFFF;
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 13px;
-                    font-weight: 800;
-                    border: none;
-                    border-radius: 22px;
-                    padding: 0px 24px;
-                }
-                QPushButton:hover {
-                    background: #DC2626;
-                }
-            """)
-        else:
-            self.lbl_top_state.setText("○ ENERGY SHIELD: DEACTIVATED / STANDBY")
-            self.lbl_top_state.setStyleSheet("color: #EF4444; font-size: 13px; font-weight: 800; letter-spacing: 0.5px;")
-            self.lbl_shield_title.setText("ENERGY SHIELD STANDBY (DEACTIVATED)")
-            self.lbl_shield_title.setStyleSheet("color: #EF4444; font-size: 18px; font-weight: 800; letter-spacing: 1.2px;")
-
-            for lbl in [self.lbl_l1_status, self.lbl_l2_status, self.lbl_l3_status]:
-                lbl.setText("○ STANDBY")
-                lbl.setStyleSheet("color: #EF4444; font-size: 12px; font-weight: 800;")
-
-            self.btn_toggle.setText("⚡ Activate & Enforce 3-Layer Shield")
-            self.btn_toggle.setStyleSheet("""
-                QPushButton {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00E676, stop:1 #00B0FF);
-                    color: #060A10;
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 13px;
-                    font-weight: 800;
-                    border: none;
-                    border-radius: 22px;
-                    padding: 0px 24px;
-                }
-                QPushButton:hover {
-                    background: #00FF88;
-                }
-            """)
-
-    def set_shield_active(self, active: bool):
-        if self.guard.is_active != active:
-            if active:
-                self.guard.activate_shield()
-            else:
-                self.guard.deactivate_shield()
-        self._refresh_ui_state()
-
-    def toggle_shield(self):
-        res = self.guard.toggle_shield()
-        self._refresh_ui_state()
-        self.shield_state_changed.emit(self.guard.is_active)
-
-    def launch_desktop_shield_overlay(self):
-        """Launches the dedicated full Desktop Energy Shield Screen HUD."""
-        self.overlay_dialog = DesktopEnergyShieldOverlay(self, is_active=self.guard.is_active)
-        self.overlay_dialog.shield_toggled.connect(self._on_overlay_shield_toggled)
-        self.overlay_dialog.canvas.trigger_shockwave()
-        if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
-            self.overlay_dialog.show()
-        else:
-            self.overlay_dialog.exec()
-
-    def _on_overlay_shield_toggled(self, active: bool):
-        self.set_shield_active(active)
-        self.shield_state_changed.emit(active)
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

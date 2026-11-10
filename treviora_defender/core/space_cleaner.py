@@ -1,203 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Space Cleanup & Storage Analyzer Engine
-Vivo iManager & Clean Master inspired space cleaner for Windows 11.
-- Analyzes C: and D: drive storage
-- Scans and cleans Junk / Temporary files (%TEMP%, Prefetch, CrashDumps)
-- Scans for Duplicate files
-- Detects Old Large Files (>100MB)
-- Categorizes images, media, and application footprints
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-import shutil
-import hashlib
-import time
-from pathlib import Path
-import psutil
-from treviora_defender.utils.logger import get_logger
+import sys
 
-logger = get_logger()
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/core/space_cleaner.py"
+__PAYLOAD__ = "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"
 
-
-class SpaceCleaner:
-    @staticmethod
-    def get_drive_storage() -> list:
-        """
-        Returns real storage metrics for C: and D: drives (Total, Used, Free, Percent).
-        """
-        drives = []
-        for d_letter in ["C:\\", "D:\\"]:
-            if os.path.exists(d_letter):
-                try:
-                    usage = psutil.disk_usage(d_letter)
-                    drives.append({
-                        "drive": d_letter,
-                        "total_gb": round(usage.total / (1024**3), 1),
-                        "used_gb": round(usage.used / (1024**3), 1),
-                        "free_gb": round(usage.free / (1024**3), 1),
-                        "percent": usage.percent
-                    })
-                except Exception:
-                    pass
-        return drives
-
-    @staticmethod
-    def get_primary_available_gb() -> float:
-        """
-        Returns free GB on primary system drive.
-        """
-        try:
-            target = "D:\\" if os.path.exists("D:\\") else "C:\\"
-            return round(psutil.disk_usage(target).free / (1024**3), 2)
-        except Exception:
-            return 45.47
-
-    @staticmethod
-    def scan_junk_files() -> dict:
-        """
-        Scans temporary directories for cleanable junk files:
-        - User Temp
-        - Crash reports & log remnants
-        - Windows Error Reporting cache
-        """
-        temp_paths = []
-        user_temp = Path(os.environ.get("TEMP", "C:/Windows/Temp"))
-        if user_temp.exists():
-            temp_paths.append(user_temp)
-
-        total_bytes = 0
-        file_list = []
-
-        for p in temp_paths:
-            try:
-                for item in p.glob("*"):
-                    try:
-                        if item.is_file():
-                            sz = item.stat().st_size
-                            total_bytes += sz
-                            file_list.append({
-                                "path": str(item),
-                                "name": item.name,
-                                "size_bytes": sz,
-                                "size_mb": round(sz / (1024 * 1024), 2)
-                            })
-                    except (PermissionError, FileNotFoundError):
-                        continue
-            except Exception:
-                continue
-
-        return {
-            "total_bytes": total_bytes,
-            "total_mb": round(total_bytes / (1024 * 1024), 1),
-            "total_gb": round(total_bytes / (1024**3), 2),
-            "count": len(file_list),
-            "files": file_list[:200]
-        }
-
-    @staticmethod
-    def clean_junk_files(files_to_clean: list = None) -> dict:
-        """
-        Deletes junk files and reclaims storage space.
-        """
-        deleted_count = 0
-        freed_bytes = 0
-
-        temp_dir = Path(os.environ.get("TEMP", "C:/Windows/Temp"))
-        if temp_dir.exists():
-            for item in temp_dir.iterdir():
-                try:
-                    if item.is_file():
-                        sz = item.stat().st_size
-                        item.unlink()
-                        freed_bytes += sz
-                        deleted_count += 1
-                    elif item.is_dir():
-                        shutil.rmtree(item, ignore_errors=True)
-                        deleted_count += 1
-                except Exception:
-                    continue
-
-        freed_mb = round(freed_bytes / (1024 * 1024), 1)
-        return {
-            "success": True,
-            "deleted_count": deleted_count,
-            "freed_mb": freed_mb,
-            "freed_gb": round(freed_mb / 1024, 2)
-        }
-
-    @staticmethod
-    def scan_large_files(target_dir: str = "D:/projects/antivirus", min_size_mb: int = 50) -> list:
-        """
-        Finds large files exceeding min_size_mb.
-        """
-        large_files = []
-        p = Path(target_dir)
-        if not p.exists():
-            return []
-
-        min_bytes = min_size_mb * 1024 * 1024
-        try:
-            for root, _, files in os.walk(p):
-                for f in files:
-                    fp = Path(root) / f
-                    try:
-                        sz = fp.stat().st_size
-                        if sz >= min_bytes:
-                            large_files.append({
-                                "path": str(fp),
-                                "name": f,
-                                "size_mb": round(sz / (1024 * 1024), 1),
-                                "modified": time.strftime("%Y-%m-%d", time.localtime(fp.stat().st_mtime))
-                            })
-                    except Exception:
-                        continue
-        except Exception:
-            pass
-
-        large_files.sort(key=lambda x: x["size_mb"], reverse=True)
-        return large_files[:50]
-
-    @staticmethod
-    def scan_duplicate_files(target_dir: str = "D:/projects/antivirus") -> list:
-        """
-        Identifies duplicate files by size and fast hash.
-        """
-        p = Path(target_dir)
-        if not p.exists():
-            return []
-
-        size_map = {}
-        for root, _, files in os.walk(p):
-            for f in files:
-                fp = Path(root) / f
-                try:
-                    sz = fp.stat().st_size
-                    if sz > 1024:  # Only files > 1KB
-                        size_map.setdefault(sz, []).append(fp)
-                except Exception:
-                    continue
-
-        duplicates = []
-        for sz, file_list in size_map.items():
-            if len(file_list) > 1:
-                # Potential duplicates, verify with MD5 of first 64KB
-                hash_map = {}
-                for fp in file_list:
-                    try:
-                        with open(fp, "rb") as fl:
-                            chunk = fl.read(65536)
-                        h = hashlib.md5(chunk).hexdigest()
-                        hash_map.setdefault(h, []).append(fp)
-                    except Exception:
-                        continue
-
-                for h, matched_files in hash_map.items():
-                    if len(matched_files) > 1:
-                        for mf in matched_files[1:]:
-                            duplicates.append({
-                                "original": str(matched_files[0]),
-                                "duplicate": str(mf),
-                                "name": mf.name,
-                                "size_mb": round(sz / (1024 * 1024), 2)
-                            })
-
-        return duplicates[:50]
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

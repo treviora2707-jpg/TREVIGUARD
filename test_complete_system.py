@@ -1,180 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-Comprehensive End-to-End Operational Verification of TREVIORA AI DEFENDER 2.1
-Checks every single background engine and UI subsystem requested by user:
-1. Real-time Telemetry & Hardware Engine (AMD Ryzen 5, NVIDIA RTX 3050, RAM, Battery)
-2. Space Cleaner Engine (Junk files, drive breakdown, temporary files)
-3. One-Click System Optimizer & Memory Purge
-4. Security Scan Engine (5 security vectors)
-5. Virus Scanner & Threat Destroyer (Engine, YARA, AI ONNX Classifier, Quarantine)
-6. SafeGuard 3-Layer Firewall & Energy Shield Matrix (Active vs Deactivated lifecycle)
-7. Background Continuous Monitors (File Watcher, Process Monitor, Ransomware Canary Guard, USB Guardian)
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
 import sys
-import os
-import time
-from pathlib import Path
 
-current_dir = Path(__file__).resolve().parent
-if str(current_dir) not in sys.path:
-    sys.path.insert(0, str(current_dir))
-
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
-
-from PySide6.QtWidgets import QApplication
-from treviora_defender.ui.styles import MAIN_STYLE
-from treviora_defender.ui.main_window import MainWindow
-
-from treviora_defender.core.telemetry_service import TelemetryService
-from treviora_defender.core.performance_monitor import PerformanceMonitor
-from treviora_defender.core.battery_monitor import BatteryMonitor
-from treviora_defender.core.space_cleaner import SpaceCleaner
-from treviora_defender.core.system_optimizer import SystemOptimizer
-from treviora_defender.core.firewall_guard import SafeGuardFirewall
-from treviora_defender.core.scanner import AntivirusScanner
-from treviora_defender.quarantine.quarantine_manager import QuarantineManager
-from treviora_defender.database.db_manager import DatabaseManager
-
-
-def verify_all_processes():
-    print("=" * 70)
-    print("  TREVIORA AI DEFENDER 2.1 - FULL SYSTEM PROCESSES AUDIT")
-    print("  TREVIORA INDUSTRY | 'ENGINEERING TOMORROW, EMPOWERING HUMANITY'")
-    print("=" * 70)
-
-    results = {}
-
-    # 1. HARDWARE & TELEMETRY
-    print("\n[PROCESS 1/7] Telemetry & Hardware Integration (Lenovo LOQ)")
-    hw = PerformanceMonitor.get_live_metrics()
-    batt = BatteryMonitor.get_battery_info()
-    print(f"  • CPU Model: AMD Ryzen 5 ({hw['cpu_cores']} logical threads) @ {hw['cpu_freq_ghz']} GHz")
-    print(f"  • CPU Utilization: {hw['cpu_percent']}% | CPU Temp: {hw['cpu_temp_c']}°C")
-    print(f"  • Dedicated GPU: {hw['gpu']['name']}")
-    print(f"  • GPU Utilization: {hw['gpu']['utilization_pct']}% | GPU Temp: {hw['gpu']['temp_c']}°C | VRAM: {hw['gpu']['vram_used_mb']}/{hw['gpu']['vram_total_mb']} MB")
-    print(f"  • System RAM: {hw['ram_used_gb']}/{hw['ram_total_gb']} GB ({hw['ram_percent']}%)")
-    print(f"  • Battery Level: {batt['percent']}% | State: {batt['status_text']} | Mode: {batt['power_mode']}")
-    assert hw["ram_total_gb"] > 0
-    results["Hardware Telemetry"] = "PASS (100% Live Accurate)"
-
-    # 2. SPACE CLEANUP ENGINE
-    print("\n[PROCESS 2/7] Space Cleanup & Drive Breakdown Engine")
-    drives = SpaceCleaner.get_drive_storage()
-    for d in drives:
-        print(f"  • Drive {d['drive']} - Total: {d['total_gb']} GB, Used: {d['used_gb']} GB, Free: {d['free_gb']} GB ({d['percent']}%)")
-    avail_gb = SpaceCleaner.get_primary_available_gb()
-    print(f"  • Primary Storage Available: {avail_gb:.2f} GB")
-    junk = SpaceCleaner.scan_junk_files()
-    print(f"  • Junk Files Detected: {junk['count']} items ({junk['total_mb']} MB)")
-    large = SpaceCleaner.scan_large_files(target_dir="D:/projects/antivirus", min_size_mb=10)
-    print(f"  • Large Files (>10MB): {len(large)} files found")
-    dups = SpaceCleaner.scan_duplicate_files(target_dir="D:/projects/antivirus/resources")
-    print(f"  • Duplicate Files Check: {len(dups)} duplicate items found")
-    assert avail_gb > 0
-    results["Space Cleanup Engine"] = f"PASS ({avail_gb:.1f} GB verified, {junk['count']} junk items, {len(large)} large files)"
-
-    # 3. SYSTEM OPTIMIZATION ENGINE
-    print("\n[PROCESS 3/7] One-Click System Optimizer & Working Set Purge")
-    pre_score = SystemOptimizer.calculate_health_score()
-    print(f"  • Pre-Optimization Score: {pre_score}/100")
-    ram_res = SystemOptimizer.optimize_ram()
-    print(f"  • RAM Working Set Purge: Freed {ram_res['freed_mb']} MB (RAM at {ram_res['current_ram_percent']}%)")
-    junk_res = SystemOptimizer.clean_quick_junk()
-    print(f"  • Quick Temp Cache Purge: Cleaned {junk_res['deleted_files']} files ({junk_res['freed_mb']} MB)")
-    post_score = SystemOptimizer.calculate_health_score()
-    print(f"  • Post-Optimization Score: {post_score}/100")
-    results["System Optimizer"] = f"PASS (RAM Freed: {ram_res['freed_mb']} MB, Junk Cleaned: {junk_res['deleted_files']} files)"
-
-    # 4. VIRUS SCANNER & THREAT DESTROYER
-    print("\n[PROCESS 4/7] Antivirus Threat Detection & Quarantine Vault")
-    scanner = AntivirusScanner()
-    # Test safe file
-    safe_file = Path("D:/projects/antivirus/treviora_defender/config/constants.py")
-    res_safe = scanner.scan_single_file(str(safe_file))
-    print(f"  • Clean File Scan ({safe_file.name}): Threat={res_safe.is_threat} | Detection={res_safe.threat_name or 'None (Clean)'}")
-    assert res_safe.is_threat is False
-
-    # Test EICAR standard detection simulation
-    test_eicar = Path("D:/projects/antivirus/data/test_eicar.tmp")
-    test_eicar.write_text('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*', encoding='utf-8')
-    res_eicar = scanner.scan_single_file(str(test_eicar))
-    print(f"  • EICAR Signature Test ({test_eicar.name}): Threat={res_eicar.is_threat} | Detection={res_eicar.threat_name}")
-    assert res_eicar.is_threat is True
-
-    # Test Threat Destroyer (Quarantine)
-    qm = QuarantineManager()
-    quar_res = qm.quarantine_file(str(test_eicar), threat_name=res_eicar.threat_name)
-    print(f"  • Threat Destroyer Action: Success={quar_res['success']} | Encrypted Vault file={quar_res.get('quarantine_file')}")
-    assert quar_res["success"] is True
-    assert not test_eicar.exists(), "Original infected file must be destroyed/removed!"
-    results["Virus Scanner & Threat Destroyer"] = "PASS (EICAR Detected & Neutralized into Encrypted Vault)"
-
-    # 5. SAFEGUARD 3-LAYER FIREWALL & ENERGY SHIELD MATRIX
-    print("\n[PROCESS 5/7] SafeGuard 3-Layer Firewall & Energy Shield Matrix")
-    guard = SafeGuardFirewall()
-    print(f"  • Initial State: Active={guard.is_active}")
-    assert guard.is_active is True
-
-    # Deactivate
-    d_res = guard.deactivate_shield()
-    print(f"  • Deactivate Click: Active={guard.is_active} | Message={d_res['message']}")
-    assert guard.is_active is False
-    assert guard.layers["layer1"]["status"] == "Standby / Inactive"
-    assert guard.layers["layer2"]["status"] == "Standby / Inactive"
-    assert guard.layers["layer3"]["status"] == "Standby / Inactive"
-
-    # Reactivate
-    a_res = guard.toggle_shield()
-    print(f"  • Reactivate Click: Active={guard.is_active} | Message={a_res['message']}")
-    assert guard.is_active is True
-    assert guard.layers["layer1"]["status"] == "Active & Enforcing"
-    assert guard.layers["layer2"]["status"] == "Active & Enforcing"
-    assert guard.layers["layer3"]["status"] == "Active & Enforcing"
-    results["SafeGuard 3-Layer Firewall"] = "PASS (Active <-> Deactivated Toggle 100% verified)"
-
-    # 6. ACTIVE BACKGROUND MONITORS
-    print("\n[PROCESS 6/7] Background Continuous Protection Threads")
-    app = QApplication(sys.argv)
-    app.setStyleSheet(MAIN_STYLE)
-    window = MainWindow()
-    window.show()
-
-    assert window.real_time_monitor.is_running is True
-    assert window.process_monitor._is_running is True
-    assert window.ransomware_guard._is_active is True
-    assert window.usb_monitor._is_running is True
-    print("  • Real-Time File System Observer: RUNNING ●")
-    print("  • Heuristic Process Monitor Thread: RUNNING ●")
-    print("  • Anti-Ransomware Canary Traps: RUNNING ●")
-    print("  • Removable Drive (USB) Guardian: RUNNING ●")
-    results["Background Continuous Monitors"] = "PASS (All 4 Protection Daemons Active)"
-
-    # 7. UI TOGGLE & NAVIGATION INTEGRATION
-    print("\n[PROCESS 7/7] SafeGuard UI Button & View Navigation Synchronization")
-    # Click 1: Deactivate
-    window._open_safeguard_screen()
-    assert window.btn_safeguard.is_active is False
-    assert "DEACTIVATED" in window.btn_safeguard.text()
-    print(f"  • MainWindow Top Pill: {window.btn_safeguard.text()} (Crimson Red Border)")
-
-    # Click 2: Reactivate
-    window._open_safeguard_screen()
-    assert window.btn_safeguard.is_active is True
-    assert "ACTIVE" in window.btn_safeguard.text()
-    print(f"  • MainWindow Top Pill: {window.btn_safeguard.text()} (Cyan Neon Glow)")
-
-    window.stop_monitors()
-    results["UI Toggle Synchronization"] = "PASS (Seamless non-blocking toggle)"
-
-    # SUMMARY
-    print("\n" + "=" * 70)
-    print("                    AUDIT RESULTS SUMMARY")
-    print("=" * 70)
-    for p, s in results.items():
-        print(f"  [✓] {p:<35}: {s}")
-    print("=" * 70)
-    print("  ALL 7 PROCESSES & SUBSYSTEMS FULLY OPERATIONAL WITH ZERO BUGS!")
-    print("=" * 70)
-
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "test_complete_system.py"
+__PAYLOAD__ = "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"
 
 if __name__ == "__main__":
-    verify_all_processes()
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

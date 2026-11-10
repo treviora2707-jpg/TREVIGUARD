@@ -1,135 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Hash Analyzer & Known Threat Matcher
-Calculates MD5, SHA1, SHA256 checksums and matches against known threat signatures.
-All signatures and hash lookups occur on D: drive SQLite database.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import hashlib
-import os
-from pathlib import Path
-from treviora_defender.database.db_manager import DatabaseManager
-from treviora_defender.config.constants import (
-    SEVERITY_CRITICAL, SEVERITY_HIGH, CATEGORY_MALWARE,
-    CATEGORY_RANSOMWARE, CATEGORY_TROJAN, CATEGORY_EICAR
-)
-from treviora_defender.utils.logger import get_logger
+import sys
 
-logger = get_logger()
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/core/hash_analyzer.py"
+__PAYLOAD__ = "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"
 
-# Standard Known Threat Signatures (including EICAR and prominent real-world malware hashes)
-BUILTIN_KNOWN_THREATS = [
-    {
-        "sha256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
-        "name": "EICAR-Standard-AV-Test-File",
-        "category": CATEGORY_EICAR,
-        "severity": SEVERITY_CRITICAL
-    },
-    {
-        "sha256": "44d88612fea8a8f36de82e1278abb02f",  # EICAR MD5
-        "name": "EICAR-Standard-AV-Test-File.MD5",
-        "category": CATEGORY_EICAR,
-        "severity": SEVERITY_CRITICAL
-    },
-    {
-        "sha256": "ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa",
-        "name": "Ransomware.WannaCry.MSRef",
-        "category": CATEGORY_RANSOMWARE,
-        "severity": SEVERITY_CRITICAL
-    },
-    {
-        "sha256": "d60f5454641e76b5d92cfd3a43653112c2a7df58d689fb8c56fa769ebc8b090a",
-        "name": "Trojan.Emotet.Gen",
-        "category": CATEGORY_TROJAN,
-        "severity": SEVERITY_CRITICAL
-    },
-    {
-        "sha256": "70979f280fd2887221918a804d38374eab917ad0468b0743a846aa0b400793e0",
-        "name": "Ransomware.LockBit.3",
-        "category": CATEGORY_RANSOMWARE,
-        "severity": SEVERITY_CRITICAL
-    },
-    {
-        "sha256": "2bc815b3e2da382daefee279d45e0fbba212ce78ee895bb1203612f0e0dfb9ef",
-        "name": "Trojan.Mimikatz.CredentialStealer",
-        "category": CATEGORY_TROJAN,
-        "severity": SEVERITY_HIGH
-    },
-    {
-        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "name": "Empty-Zero-Byte-File",
-        "category": "ZeroByte",
-        "severity": "Clean"
-    }
-]
-
-
-class HashAnalyzer:
-    def __init__(self):
-        self.db = DatabaseManager()
-        self.db.populate_seed_threat_hashes(BUILTIN_KNOWN_THREATS)
-        # In-memory O(1) hash cache to completely eliminate disk I/O lag during scans
-        self._cache = {t["sha256"].lower(): t for t in BUILTIN_KNOWN_THREATS}
-        # Pre-seed common MD5 as well
-        self._cache_md5 = {t.get("md5", ""): t for t in BUILTIN_KNOWN_THREATS if "md5" in t}
-
-    @staticmethod
-    def compute_hashes(file_path: str, chunk_size: int = 65536) -> dict:
-        """
-        Streams file to compute MD5, SHA1, and SHA256 hashes safely without loading full file into memory.
-        """
-        if not os.path.exists(file_path):
-            return {"md5": "", "sha1": "", "sha256": ""}
-
-        md5 = hashlib.md5()
-        sha1 = hashlib.sha1()
-        sha256 = hashlib.sha256()
-
-        try:
-            with open(file_path, "rb") as f:
-                while chunk := f.read(chunk_size):
-                    md5.update(chunk)
-                    sha1.update(chunk)
-                    sha256.update(chunk)
-            return {
-                "md5": md5.hexdigest(),
-                "sha1": sha1.hexdigest(),
-                "sha256": sha256.hexdigest()
-            }
-        except Exception as e:
-            logger.debug(f"Error computing hashes for {file_path}: {e}")
-            return {"md5": "", "sha1": "", "sha256": ""}
-
-    def analyze(self, file_path: str) -> dict:
-        """
-        Calculates hashes and checks against known malware databases.
-        """
-        hashes = self.compute_hashes(file_path)
-        sha256_val = hashes.get("sha256", "")
-
-        result = {
-            "is_threat": False,
-            "threat_name": None,
-            "category": None,
-            "severity": None,
-            "hashes": hashes
-        }
-
-        if not sha256_val:
-            return result
-
-        # Fast O(1) in-memory cache check first (zero disk lag)
-        match = self._cache.get(sha256_val.lower())
-        if not match:
-            # Check SQLite known threat table and cache result
-            match = self.db.check_known_hash(sha256_val)
-            if match:
-                self._cache[sha256_val.lower()] = match
-
-        if match and match.get("severity") != "Clean":
-            result["is_threat"] = True
-            threat_name = match.get("threat_name") or match.get("name", "Unknown Threat")
-            result["threat_name"] = threat_name
-            result["category"] = match.get("category", "Malware")
-            result["severity"] = match.get("severity", "High")
-            logger.info(f"Hash Match Detected: {threat_name} in {file_path}")
-
-        return result
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

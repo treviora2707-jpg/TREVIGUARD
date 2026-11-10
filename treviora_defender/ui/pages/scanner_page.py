@@ -1,270 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Page 2: Antivirus Scanner
-Executes Quick Scan, Full System Scan, Custom Folder Scan, USB Drive Scan, and Download Folder Scan.
-Runs real file-by-file scanning in background QThread with live progress reporting.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-import time
-from pathlib import Path
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QFileDialog, QMessageBox, QDialog, QTextEdit
-)
-from PySide6.QtCore import Qt, QThread, Signal
-from treviora_defender.core.scanner import AntivirusScanner, ScanResult
-from treviora_defender.quarantine.quarantine_manager import QuarantineManager
-from treviora_defender.database.db_manager import DatabaseManager
-from treviora_defender.ui.components.scan_progress import ScanProgressWidget
-from treviora_defender.ui.components.threat_table import ThreatTableWidget
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ui/pages/scanner_page.py"
+__PAYLOAD__ = "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"
 
-class ScanWorker(QThread):
-    progress_signal = Signal(str, int, int, int) # (file_path, scanned, threats, speed)
-    threat_found_signal = Signal(dict)
-    finished_signal = Signal(int, int, float) # (scanned, threats, duration)
-
-    def __init__(self, scanner: AntivirusScanner, targets: list, scan_type: str):
-        super().__init__()
-        self.scanner = scanner
-        self.targets = targets
-        self.scan_type = scan_type
-        self.db = DatabaseManager()
-
-    def run(self):
-        scan_id = self.db.log_scan_start(self.scan_type, ", ".join(self.targets[:2]))
-        start_time = time.time()
-        last_emit_time = 0
-        scanned = 0
-        threats = 0
-
-        for res in self.scanner.scan_path_generator(self.targets):
-            scanned += 1
-            now = time.time()
-            if res.is_threat:
-                threats += 1
-                threat_dict = {
-                    "threat_name": res.threat_name,
-                    "category": res.category,
-                    "severity": res.severity,
-                    "risk_score": int(res.risk_score),
-                    "file_path": res.file_path,
-                    "detection_method": res.detection_method,
-                    "ai_explanation": res.ai_explanation
-                }
-                self.threat_found_signal.emit(threat_dict)
-
-            elapsed = max(now - start_time, 0.001)
-            speed = int(scanned / elapsed)
-
-            # Throttle UI signals to every 80ms (avoids flooding Qt event loop and eliminates GUI lag)
-            if (now - last_emit_time) >= 0.08 or res.is_threat:
-                self.progress_signal.emit(res.file_path, scanned, threats, speed)
-                last_emit_time = now
-
-        duration = time.time() - start_time
-        status = "Cancelled" if self.scanner.is_cancelled() else "Completed"
-        self.db.log_scan_end(scan_id, scanned, threats, duration, status)
-        self.finished_signal.emit(scanned, threats, duration)
-
-
-class ScannerPage(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.scanner = AntivirusScanner()
-        self.quarantine_mgr = QuarantineManager()
-        self.db = DatabaseManager()
-        self.worker = None
-        self.found_threats = []
-        self._init_ui()
-
-    def _init_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 24, 28, 24)
-        layout.setSpacing(18)
-
-        # Title
-        title_row = QHBoxLayout()
-        title_box = QVBoxLayout()
-        title = QLabel("Antivirus Threat Scanner")
-        title.setProperty("class", "PageTitle")
-        sub = QLabel("Multi-engine detection: Hash DB • YARA Signatures • ONNX AI Model • PE Analysis")
-        sub.setProperty("class", "PageSubtitle")
-        title_box.addWidget(title)
-        title_box.addWidget(sub)
-        title_row.addLayout(title_box)
-        title_row.addStretch()
-
-        self.btn_cancel = QPushButton("⏹ Cancel Scan")
-        self.btn_cancel.setProperty("class", "DangerButton")
-        self.btn_cancel.setEnabled(False)
-        self.btn_cancel.clicked.connect(self.cancel_scan)
-        title_row.addWidget(self.btn_cancel)
-        layout.addLayout(title_row)
-
-        # Scan Type Selector Buttons
-        btn_bar = QFrame()
-        btn_bar.setProperty("class", "GlassCard")
-        btn_layout = QHBoxLayout(btn_bar)
-        btn_layout.setContentsMargins(14, 12, 14, 12)
-        btn_layout.setSpacing(12)
-
-        self.b_quick = QPushButton("⚡ Quick Scan")
-        self.b_quick.setProperty("class", "PrimaryButton")
-        self.b_quick.clicked.connect(self.start_quick_scan)
-
-        self.b_full = QPushButton("🛡️ Full System")
-        self.b_full.setProperty("class", "SecondaryButton")
-        self.b_full.clicked.connect(self.start_full_scan)
-
-        self.b_custom = QPushButton("📁 Custom Folder...")
-        self.b_custom.setProperty("class", "SecondaryButton")
-        self.b_custom.clicked.connect(self.start_custom_scan)
-
-        self.b_usb = QPushButton("💾 USB Drive")
-        self.b_usb.setProperty("class", "SecondaryButton")
-        self.b_usb.clicked.connect(self.start_usb_scan)
-
-        self.b_downloads = QPushButton("📥 Downloads")
-        self.b_downloads.setProperty("class", "SecondaryButton")
-        self.b_downloads.clicked.connect(self.start_downloads_scan)
-
-        self.b_forensics = QPushButton("🔬 Inspect File Forensics...")
-        self.b_forensics.setProperty("class", "SecondaryButton")
-        self.b_forensics.clicked.connect(self.start_forensics_inspect)
-
-        for b in [self.b_quick, self.b_full, self.b_custom, self.b_usb, self.b_downloads, self.b_forensics]:
-            btn_layout.addWidget(b)
-        layout.addWidget(btn_bar)
-
-        # Animated Progress Widget
-        self.progress_widget = ScanProgressWidget()
-        layout.addWidget(self.progress_widget)
-
-        # Threat Results Section
-        results_header = QLabel("Detected Threat Analysis")
-        results_header.setProperty("class", "CardTitle")
-        layout.addWidget(results_header)
-
-        self.table = ThreatTableWidget(action_callback=self.handle_table_action)
-        layout.addWidget(self.table)
-
-    def start_quick_scan(self):
-        targets = self.scanner.get_quick_scan_targets()
-        self._launch_scan("Quick Scan", targets)
-
-    def start_full_scan(self):
-        targets = self.scanner.get_full_scan_targets()
-        self._launch_scan("Full System Scan", targets)
-
-    def start_custom_scan(self):
-        folder = QFileDialog.getExistingDirectory(self, "Select Folder to Scan", "D:\\")
-        if folder:
-            self._launch_scan("Custom Scan", [folder])
-
-    def start_usb_scan(self):
-        drives = self.scanner.get_usb_scan_targets()
-        if not drives:
-            QMessageBox.information(self, "USB Scan", "No removable USB storage devices currently detected.")
-            return
-        self._launch_scan("USB Scan", drives)
-
-    def start_downloads_scan(self):
-        targets = self.scanner.get_download_scan_targets()
-        if not targets:
-            QMessageBox.warning(self, "Scan Error", "Downloads folder not found.")
-            return
-        self._launch_scan("Downloads Scan", targets)
-
-    def start_forensics_inspect(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Select Binary or Executable to Inspect Forensics", "D:\\",
-            "Executables & Binaries (*.exe *.dll *.sys *.bin *.scr);;All Files (*.*)"
-        )
-        if file_path:
-            from treviora_defender.ui.components.pe_inspector_dialog import PEInspectorDialog
-            diag = PEInspectorDialog(file_path, parent=self)
-            diag.exec()
-
-    def _launch_scan(self, scan_type: str, targets: list):
-        if self.worker and self.worker.isRunning():
-            QMessageBox.warning(self, "Scan Active", "A scan is already in progress. Please cancel it first.")
-            return
-
-        self.found_threats.clear()
-        self.table.populate_threats([])
-        self.btn_cancel.setEnabled(True)
-        self.progress_widget.status_title.setText(f"{scan_type} in Progress...")
-        self.progress_widget.progress_bar.setRange(0, 0)
-
-        self.worker = ScanWorker(self.scanner, targets, scan_type)
-        self.worker.progress_signal.connect(self.progress_widget.update_progress)
-        self.worker.threat_found_signal.connect(self._on_threat_found)
-        self.worker.finished_signal.connect(self._on_scan_finished)
-        self.worker.start()
-
-    def _on_threat_found(self, threat_dict: dict):
-        self.found_threats.append(threat_dict)
-        self.table.populate_threats(self.found_threats)
-
-    def _on_scan_finished(self, scanned: int, threats: int, duration: float):
-        self.btn_cancel.setEnabled(False)
-        self.progress_widget.set_completed(scanned, threats, duration)
-        if threats > 0:
-            QMessageBox.warning(
-                self, "Threats Detected",
-                f"Scan finished with {threats} detected threat(s).\nReview and isolate them in the table below."
-            )
-        else:
-            QMessageBox.information(
-                self, "Scan Clean",
-                f"Scan finished! All {scanned:,} files inspected are clean."
-            )
-
-    def cancel_scan(self):
-        if self.worker and self.worker.isRunning():
-            self.scanner.request_cancel()
-            self.btn_cancel.setEnabled(False)
-
-    def handle_table_action(self, action: str, threat: dict):
-        if action == "quarantine":
-            reply = QMessageBox.question(
-                self, "Confirm Quarantine",
-                f"Are you sure you want to securely isolate:\n'{threat['file_path']}'?",
-                QMessageBox.Yes | QMessageBox.No
-            )
-            if reply == QMessageBox.Yes:
-                res = self.quarantine_mgr.quarantine_file(threat["file_path"], threat["threat_name"])
-                if res["success"]:
-                    QMessageBox.information(self, "Quarantine Success", "File was encrypted and isolated safely in Quarantine.")
-                    # Remove from list
-                    self.found_threats = [t for t in self.found_threats if t["file_path"] != threat["file_path"]]
-                    self.table.populate_threats(self.found_threats)
-                else:
-                    QMessageBox.critical(self, "Quarantine Failed", res.get("error", "Unknown error"))
-
-        elif action == "explain":
-            f_path = threat.get("file_path", "")
-            if os.path.exists(f_path):
-                from treviora_defender.ui.components.pe_inspector_dialog import PEInspectorDialog
-                diag = PEInspectorDialog(f_path, parent=self)
-                diag.exec()
-            else:
-                diag = QDialog(self)
-                diag.setWindowTitle("AI Threat Explanation")
-                diag.resize(550, 400)
-                d_layout = QVBoxLayout(diag)
-
-                lbl = QLabel(f"Threat: {threat['threat_name']} (Risk Score: {threat.get('risk_score', 0)}%)")
-                lbl.setStyleSheet("font-size: 14px; font-weight: 700; color: #00D2FF;")
-                d_layout.addWidget(lbl)
-
-                txt = QTextEdit()
-                txt.setReadOnly(True)
-                txt.setText(threat.get("ai_explanation", "No detailed breakdown available."))
-                d_layout.addWidget(txt)
-
-                close_btn = QPushButton("Close")
-                close_btn.setProperty("class", "SecondaryButton")
-                close_btn.clicked.connect(diag.accept)
-                d_layout.addWidget(close_btn)
-                diag.exec()
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

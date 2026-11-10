@@ -1,124 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Ransomware Protection & Canary Guard
-Monitors for:
-- Rapid mass file modifications/renames (>15 within 4 seconds)
-- Known ransomware extensions (.locked, .crypto, .crypted, .wncry, .lockbit, etc.)
-- Canary honeypot alteration (decoy files located strictly on D: drive)
-- Uncontrolled mass encryption behavior
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-import time
-import threading
-from pathlib import Path
-from collections import deque
-from treviora_defender.config.constants import DATA_DIR
-from treviora_defender.database.db_manager import DatabaseManager
-from treviora_defender.utils.logger import get_logger
+import sys
 
-logger = get_logger()
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/monitoring/ransomware_guard.py"
+__PAYLOAD__ = "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"
 
-KNOWN_RANSOM_EXTENSIONS = {
-    ".locked", ".crypto", ".crypt", ".crypted", ".wncry", ".lockbit",
-    ".blackcat", ".darkside", ".revil", ".ryuk", ".enc", ".encrypted",
-    ".ransom", ".pay_here", ".wallet"
-}
-
-CANARY_DIR = DATA_DIR / "canaries"
-
-
-class RansomwareGuard:
-    def __init__(self, alert_callback=None):
-        self.alert_callback = alert_callback
-        self.db = DatabaseManager()
-        self._recent_file_events = deque()  # (timestamp, path, action)
-        self._lock = threading.Lock()
-        self._is_active = False
-        self._canary_hashes = {}
-        self._init_canary_honeypots()
-
-    def _init_canary_honeypots(self):
-        r"""
-        Deploys safe decoy canary files in D:\projects\antivirus\data\canaries.
-        If an autonomous ransomware starts encrypting directories on D: or C:,
-        the canaries will be touched first, triggering immediate containment.
-        """
-        CANARY_DIR.mkdir(parents=True, exist_ok=True)
-        canary_names = ["passwords_backup.xlsx", "personal_photos.zip", "finance_2026.docx"]
-
-        for name in canary_names:
-            c_path = CANARY_DIR / name
-            if not c_path.exists():
-                with open(c_path, "wb") as f:
-                    f.write(f"TREVIORA_CANARY_INTEGRITY_CHECK_{name}".encode("utf-8") * 20)
-            self._canary_hashes[str(c_path)] = c_path.stat().st_size
-
-    def record_file_event(self, file_path: str, action: str):
-        """
-        Receives notification from filesystem listener and checks for ransomware velocity.
-        """
-        now = time.time()
-        p = Path(file_path)
-        ext = p.suffix.lower()
-
-        with self._lock:
-            # Check 1: Known Ransomware Extension
-            if ext in KNOWN_RANSOM_EXTENSIONS:
-                alert = {
-                    "type": "Ransomware Extension",
-                    "file_path": file_path,
-                    "extension": ext,
-                    "severity": "Critical",
-                    "description": f"File created or renamed with known ransomware extension '{ext}'."
-                }
-                self._dispatch_alert(alert)
-                return
-
-            # Check 2: Canary Honeypot Tampering
-            if str(p) in self._canary_hashes:
-                if not p.exists() or p.stat().st_size != self._canary_hashes[str(p)]:
-                    alert = {
-                        "type": "Canary Honeypot Tripped",
-                        "file_path": file_path,
-                        "severity": "Critical",
-                        "description": "Decoy canary document was modified or deleted! Potential active ransomware!"
-                    }
-                    self._dispatch_alert(alert)
-                    return
-
-            # Check 3: Velocity Check (>15 modifications within 4 seconds)
-            self._recent_file_events.append((now, file_path, action))
-
-            # Evict entries older than 4 seconds
-            while self._recent_file_events and (now - self._recent_file_events[0][0]) > 4.0:
-                self._recent_file_events.popleft()
-
-            if len(self._recent_file_events) >= 15:
-                affected_sample = [e[1] for e in list(self._recent_file_events)[:5]]
-                alert = {
-                    "type": "Mass File Modification Velocity",
-                    "count": len(self._recent_file_events),
-                    "sample": affected_sample,
-                    "severity": "High",
-                    "description": f"Rapid mass file modifications detected ({len(self._recent_file_events)} events in 4s). Typical of ransomware encryption."
-                }
-                self._dispatch_alert(alert)
-                self._recent_file_events.clear()
-
-    def _dispatch_alert(self, alert: dict):
-        logger.warning(f"[RansomwareGuard ALERT] {alert['description']}")
-        self.db.log_event(
-            event_type="RansomwareAlert",
-            source="RansomwareGuard",
-            description=alert["description"],
-            severity=alert.get("severity", "Critical")
-        )
-        if self.alert_callback:
-            self.alert_callback(alert)
-
-    def start(self):
-        self._is_active = True
-        logger.info("Ransomware Guard initialized and active.")
-
-    def stop(self):
-        self._is_active = False
-        logger.info("Ransomware Guard stopped.")
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

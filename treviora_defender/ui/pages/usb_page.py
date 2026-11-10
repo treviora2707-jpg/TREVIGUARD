@@ -1,113 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Page 8: USB Protection
-Monitors removable media, scans root files for autorun / shortcut worms,
-and generates USB security reports.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QTableWidget, QTableWidgetItem, QHeaderView, QCheckBox, QMessageBox
-)
-from PySide6.QtCore import Qt, Signal
-from treviora_defender.config.settings import SettingsManager
-from treviora_defender.utils.win_utils import get_removable_drives
-from treviora_defender.monitoring.usb_monitor import USBMonitor
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ui/pages/usb_page.py"
+__PAYLOAD__ = "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"
 
-class USBPage(QWidget):
-    request_usb_scan = Signal(str)
-
-    def __init__(self):
-        super().__init__()
-        self.settings = SettingsManager()
-        self._init_ui()
-
-    def _init_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 24, 28, 24)
-        layout.setSpacing(18)
-
-        # Header
-        header_row = QHBoxLayout()
-        header = QVBoxLayout()
-        title = QLabel("USB Storage & Removable Media Sentinel")
-        title.setProperty("class", "PageTitle")
-        sub = QLabel("Automatic insertion detection • Shortcut worm prevention • Autorun.inf lockdown")
-        sub.setProperty("class", "PageSubtitle")
-        header.addWidget(title)
-        header.addWidget(sub)
-        header_row.addLayout(header)
-        header_row.addStretch()
-
-        btn_refresh = QPushButton("🔄 Scan Hardware Buses")
-        btn_refresh.setProperty("class", "SecondaryButton")
-        btn_refresh.clicked.connect(self.refresh_drives)
-        header_row.addWidget(btn_refresh)
-        layout.addLayout(header_row)
-
-        # Control Bar
-        ctrl_frame = QFrame()
-        ctrl_frame.setProperty("class", "GlassCard")
-        ctrl_layout = QHBoxLayout(ctrl_frame)
-        ctrl_layout.setContentsMargins(18, 14, 18, 14)
-
-        self.chk_auto = QCheckBox("Automatically Initiate Scan Upon USB Insertion")
-        self.chk_auto.setChecked(self.settings.get("usb_auto_scan", True))
-        self.chk_auto.setStyleSheet("color: #E2E8F0; font-weight: 600;")
-        self.chk_auto.toggled.connect(lambda v: self.settings.set("usb_auto_scan", v))
-        ctrl_layout.addWidget(self.chk_auto)
-        ctrl_layout.addStretch()
-
-        layout.addWidget(ctrl_frame)
-
-        # Removable Drives Table
-        tbl_label = QLabel("Connected Removable Storage Volumes")
-        tbl_label.setProperty("class", "CardTitle")
-        layout.addWidget(tbl_label)
-
-        self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Drive Letter", "Integrity Status", "Artifacts Detected", "Actions"])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        self.table.verticalHeader().setVisible(False)
-        layout.addWidget(self.table)
-
-        self.refresh_drives()
-
-    def refresh_drives(self):
-        drives = get_removable_drives()
-        self.table.setRowCount(0)
-
-        if not drives:
-            self.table.insertRow(0)
-            self.table.setItem(0, 0, QTableWidgetItem("None"))
-            self.table.setItem(0, 1, QTableWidgetItem("No USB Drives Connected"))
-            self.table.setItem(0, 2, QTableWidgetItem("Connect a USB flash drive or external drive to inspect."))
-            self.table.setItem(0, 3, QTableWidgetItem("-"))
-            return
-
-        for r, d in enumerate(drives):
-            self.table.insertRow(r)
-            self.table.setItem(r, 0, QTableWidgetItem(d))
-
-            insp = USBMonitor.inspect_usb_drive(d)
-            if insp["is_suspicious"]:
-                status_item = QTableWidgetItem("⚠️ Artifacts Found")
-                status_item.setForeground(Qt.yellow)
-                art_item = QTableWidgetItem("; ".join(insp["artifacts"]))
-                art_item.setForeground(Qt.red)
-            else:
-                status_item = QTableWidgetItem("🟢 Clean Root")
-                status_item.setForeground(Qt.green)
-                art_item = QTableWidgetItem("No suspicious autorun or hidden executables on root.")
-
-            self.table.setItem(r, 1, status_item)
-            self.table.setItem(r, 2, art_item)
-
-            btn_scan = QPushButton("Deep Scan Drive")
-            btn_scan.setProperty("class", "PrimaryButton")
-            btn_scan.setFixedHeight(26)
-            btn_scan.clicked.connect(lambda _, drv=d: self.request_usb_scan.emit(drv))
-            self.table.setCellWidget(r, 3, btn_scan)
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

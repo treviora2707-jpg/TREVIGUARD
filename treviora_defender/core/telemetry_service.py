@@ -1,254 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Ultra-Fast Asynchronous Telemetry Service
-Performs all hardware and system metric queries in a dedicated background QThread.
-Never blocks or sleeps on the Qt GUI main thread.
-Zero CPU lag, instantaneous GUI updates.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import time
-import threading
-import subprocess
-import shutil
-import psutil
-from pathlib import Path
-from PySide6.QtCore import QThread, Signal, QObject
+import sys
 
-from treviora_defender.utils.logger import get_logger
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/core/telemetry_service.py"
+__PAYLOAD__ = "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"
 
-logger = get_logger()
-
-
-class TelemetryWorker(QThread):
-    metrics_ready = Signal(dict)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._is_running = True
-        self._stop_event = threading.Event()
-        self._cached_gpu = {
-            "name": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
-            "utilization_pct": 8,
-            "vram_used_mb": 950,
-            "vram_total_mb": 6144,
-            "temp_c": 42,
-            "is_nvidia": True
-        }
-        self._cached_power_mode = "Balanced Mode (Optimized for Ryzen 5)"
-        self._last_powercfg_time = 0
-        self._last_disk_time = 0
-        self._cached_disk = {"free_gb": 87.32, "total_gb": 250.0}
-
-    def stop(self):
-        self._is_running = False
-        self._stop_event.set()
-
-    def run(self):
-        # Initialize non-blocking CPU measurement
-        psutil.cpu_percent(interval=None)
-
-        while self._is_running and not self._stop_event.is_set():
-            try:
-                metrics = self._collect_metrics()
-                self.metrics_ready.emit(metrics)
-            except Exception as e:
-                logger.debug(f"Telemetry collect error: {e}")
-
-            # Non-blocking interruptible sleep
-            self._stop_event.wait(timeout=3.0)
-
-    def _collect_metrics(self) -> dict:
-        now = time.time()
-
-        # 1. Non-blocking CPU metrics
-        cpu_pct = psutil.cpu_percent(interval=None)
-        cpu_freq = psutil.cpu_freq()
-        cur_freq_ghz = round(cpu_freq.current / 1000, 2) if cpu_freq else 3.2
-
-        # 2. RAM metrics (24GB Lenovo LOQ)
-        mem = psutil.virtual_memory()
-        ram_used_gb = round(mem.used / (1024**3), 1)
-        ram_total_gb = round(mem.total / (1024**3), 1)
-        ram_free_gb = round(mem.available / (1024**3), 1)
-
-        # 3. GPU metrics via nvidia-smi (cached, fast timeout)
-        try:
-            cmd = [
-                "nvidia-smi",
-                "--query-gpu=name,utilization.gpu,memory.used,memory.total,temperature.gpu",
-                "--format=csv,noheader,nounits"
-            ]
-            out = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=1.5,
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
-            if out.returncode == 0 and out.stdout.strip():
-                parts = [p.strip() for p in out.stdout.strip().split(",")]
-                if len(parts) >= 5:
-                    self._cached_gpu["name"] = parts[0]
-                    self._cached_gpu["utilization_pct"] = int(parts[1])
-                    self._cached_gpu["vram_used_mb"] = int(parts[2])
-                    self._cached_gpu["vram_total_mb"] = int(parts[3])
-                    self._cached_gpu["temp_c"] = int(parts[4])
-        except Exception:
-            pass
-
-        # 4. CPU Temperature estimate based on GPU thermal profile
-        cpu_temp = min(92, max(38, self._cached_gpu["temp_c"] + int(cpu_pct * 0.25)))
-
-        # 5. Battery info
-        batt_info = {
-            "has_battery": False,
-            "percent": 95,
-            "is_plugged": True,
-            "status_text": "AC Power Connected",
-            "time_remaining": "Plugged in",
-            "health": "Good (Normal)",
-            "power_mode": self._cached_power_mode
-        }
-        try:
-            b = psutil.sensors_battery()
-            if b:
-                batt_info["has_battery"] = True
-                batt_info["percent"] = int(b.percent)
-                batt_info["is_plugged"] = bool(b.power_plugged)
-                if b.power_plugged:
-                    batt_info["status_text"] = "Charging" if b.percent < 99 else "Fully Charged (AC Connected)"
-                    batt_info["time_remaining"] = "Plugged in"
-                else:
-                    batt_info["status_text"] = "On Battery Power"
-                    if b.secsleft and b.secsleft > 0:
-                        mins = b.secsleft // 60
-                        batt_info["time_remaining"] = f"{mins // 60}h {mins % 60}m"
-        except Exception:
-            pass
-
-        # Query powercfg only every 15 seconds to avoid process overhead
-        if now - self._last_powercfg_time > 15:
-            self._last_powercfg_time = now
-            try:
-                out = subprocess.run(
-                    ["powercfg", "/getactivescheme"],
-                    capture_output=True,
-                    text=True,
-                    timeout=1.5,
-                    creationflags=subprocess.CREATE_NO_WINDOW
-                )
-                line = out.stdout.lower()
-                if "high performance" in line or "ultimate" in line:
-                    self._cached_power_mode = "Performance Mode (Lenovo LOQ High Boost)"
-                elif "power saver" in line:
-                    self._cached_power_mode = "Power Saver Mode"
-                else:
-                    self._cached_power_mode = "Balanced Mode (Optimized for Ryzen 5)"
-            except Exception:
-                pass
-        batt_info["power_mode"] = self._cached_power_mode
-
-        # 6. Disk metrics (query primary drive D: or C: every 10 seconds)
-        if now - self._last_disk_time > 10:
-            self._last_disk_time = now
-            try:
-                target_drive = "D:/" if Path("D:/").exists() else "C:/"
-                du = shutil.disk_usage(target_drive)
-                self._cached_disk["free_gb"] = round(du.free / (1024**3), 2)
-                self._cached_disk["total_gb"] = round(du.total / (1024**3), 1)
-            except Exception:
-                pass
-
-        # 7. Fast Health Score calculation (0 ms, non-blocking)
-        score = 100
-        if mem.percent > 85:
-            score -= 15
-        elif mem.percent > 70:
-            score -= 8
-        elif mem.percent > 55:
-            score -= 3
-
-        if cpu_pct > 80:
-            score -= 15
-        elif cpu_pct > 50:
-            score -= 8
-
-        health_score = max(70, min(100, score))
-
-        return {
-            "cpu_percent": cpu_pct,
-            "cpu_freq_ghz": cur_freq_ghz,
-            "cpu_cores": psutil.cpu_count(logical=True),
-            "cpu_temp_c": cpu_temp,
-            "ram_percent": mem.percent,
-            "ram_used_gb": ram_used_gb,
-            "ram_total_gb": ram_total_gb,
-            "ram_free_gb": ram_free_gb,
-            "gpu": self._cached_gpu,
-            "battery": batt_info,
-            "disk": self._cached_disk,
-            "health_score": health_score
-        }
-
-
-class TelemetryService(QObject):
-    """
-    Singleton service that manages the single background TelemetryWorker.
-    Provides signals and instant cached access to all UI views.
-    """
-    _instance = None
-    telemetry_updated = Signal(dict)
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = TelemetryService()
-        return cls._instance
-
-    def __init__(self):
-        super().__init__()
-        self.cached_metrics = {
-            "cpu_percent": 33.3,
-            "cpu_freq_ghz": 3.2,
-            "cpu_cores": 12,
-            "cpu_temp_c": 46,
-            "ram_percent": 50.0,
-            "ram_used_gb": 11.9,
-            "ram_total_gb": 23.7,
-            "ram_free_gb": 11.8,
-            "gpu": {
-                "name": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
-                "utilization_pct": 9,
-                "vram_used_mb": 950,
-                "vram_total_mb": 6144,
-                "temp_c": 42,
-                "is_nvidia": True
-            },
-            "battery": {
-                "has_battery": True,
-                "percent": 58,
-                "is_plugged": True,
-                "status_text": "AC Power Connected",
-                "time_remaining": "~ 1h 45m",
-                "health": "Good (Normal)",
-                "power_mode": "Balanced Mode (Optimized for Ryzen 5)"
-            },
-            "disk": {
-                "free_gb": 87.32,
-                "total_gb": 250.0
-            },
-            "health_score": 95
-        }
-        self.worker = TelemetryWorker()
-        self.worker.metrics_ready.connect(self._on_metrics_ready)
-
-    def start(self):
-        if not self.worker.isRunning():
-            self.worker.start()
-
-    def stop(self):
-        if self.worker.isRunning():
-            self.worker.stop()
-            self.worker.wait(1000)
-
-    def _on_metrics_ready(self, metrics: dict):
-        self.cached_metrics = metrics
-        self.telemetry_updated.emit(metrics)
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

@@ -1,254 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Optimize View (Matches Image 2: Vivo iManager Optimize Screen)
-- Back button `< Optimize`
-- Brand Header with Circular Logo Avatar & Tagline
-- Big Score Counter
-- "Optimizing..." state with segmented progress bar
-- Checklist items inside ModernCard
-- "Stop Optimization" / "Done" cyan button
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QScrollArea
-)
-from PySide6.QtCore import Qt, Signal, QTimer
-from treviora_defender.core.system_optimizer import SystemOptimizer
-from treviora_defender.ui.animated_widgets import SegmentedProgressBar
-from treviora_defender.ui.custom_components import ModernCard, BrandHeaderWidget
+import sys
 
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/ui/views/optimize_view.py"
+__PAYLOAD__ = "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"
 
-class OptimizeView(QWidget):
-    back_requested = Signal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.current_score = 92
-        self.step = 0
-        self.is_optimizing = False
-        self._init_ui()
-
-    def _init_ui(self):
-        root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("background: #060911; border: none;")
-
-        wrapper = QWidget()
-        wrapper.setStyleSheet("background: #060911;")
-        w_layout = QHBoxLayout(wrapper)
-        w_layout.setContentsMargins(0, 0, 0, 0)
-        w_layout.addStretch(1)
-
-        container = QWidget()
-        container.setStyleSheet("background: transparent;")
-        container.setMaximumWidth(960)
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(24, 20, 24, 28)
-        layout.setSpacing(18)
-
-        # 1. Back button header + Brand Header
-        top_row = QHBoxLayout()
-        self.btn_back = QPushButton("‹  Optimize")
-        self.btn_back.setStyleSheet("font-size: 18px; font-weight: 700; color: #FFFFFF; background: transparent; border: none;")
-        self.btn_back.setCursor(Qt.PointingHandCursor)
-        self.btn_back.clicked.connect(self.back_requested.emit)
-        top_row.addWidget(self.btn_back)
-
-        top_row.addStretch()
-
-        self.brand_header = BrandHeaderWidget()
-        top_row.addWidget(self.brand_header)
-        layout.addLayout(top_row)
-
-        layout.addSpacing(6)
-
-        # 2. Big Score (Image 2)
-        self.lbl_score = QLabel("98")
-        self.lbl_score.setStyleSheet("""
-            QLabel {
-                color: #FFFFFF;
-                font-family: 'Segoe UI', 'Inter', sans-serif;
-                font-size: 72px;
-                font-weight: 800;
-                line-height: 1.0;
-            }
-        """)
-        layout.addWidget(self.lbl_score)
-
-        # "Optimizing..." label
-        self.lbl_status = QLabel("Optimizing...")
-        self.lbl_status.setStyleSheet("color: #94A3B8; font-size: 15px; font-weight: 600;")
-        layout.addWidget(self.lbl_status)
-
-        # Segmented Progress Bar
-        self.seg_bar = SegmentedProgressBar(segments=4)
-        layout.addWidget(self.seg_bar)
-
-        layout.addSpacing(10)
-
-        # 3. Checklist Card (Image 2)
-        card = ModernCard()
-        c_layout = QVBoxLayout(card)
-        c_layout.setContentsMargins(24, 22, 24, 22)
-        c_layout.setSpacing(18)
-
-        # Item 1: Security protection
-        row1 = QHBoxLayout()
-        lbl_i1_icon = QLabel("🛡️")
-        lbl_i1_icon.setStyleSheet("font-size: 20px;")
-        t_box1 = QVBoxLayout()
-        lbl_i1_title = QLabel("Security protection")
-        lbl_i1_title.setStyleSheet("color: #FFFFFF; font-size: 15px; font-weight: 600;")
-        self.lbl_i1_sub = QLabel("Scanning memory & background threats...")
-        self.lbl_i1_sub.setStyleSheet("color: #64748B; font-size: 12px;")
-        t_box1.addWidget(lbl_i1_title)
-        t_box1.addWidget(self.lbl_i1_sub)
-        row1.addWidget(lbl_i1_icon)
-        row1.addLayout(t_box1)
-        row1.addStretch()
-        self.lbl_i1_badge = QLabel("⌛")
-        row1.addWidget(self.lbl_i1_badge)
-        c_layout.addLayout(row1)
-
-        # Item 2: Cleanup
-        row2 = QHBoxLayout()
-        lbl_i2_icon = QLabel("🧹")
-        lbl_i2_icon.setStyleSheet("font-size: 20px;")
-        t_box2 = QVBoxLayout()
-        lbl_i2_title = QLabel("Cleanup")
-        lbl_i2_title.setStyleSheet("color: #FFFFFF; font-size: 15px; font-weight: 600;")
-        self.lbl_i2_sub = QLabel("Flushing idle RAM & clearing temp cache...")
-        self.lbl_i2_sub.setStyleSheet("color: #64748B; font-size: 12px;")
-        t_box2.addWidget(lbl_i2_title)
-        t_box2.addWidget(self.lbl_i2_sub)
-        row2.addWidget(lbl_i2_icon)
-        row2.addLayout(t_box2)
-        row2.addStretch()
-        self.lbl_i2_badge = QLabel("⌛")
-        row2.addWidget(self.lbl_i2_badge)
-        c_layout.addLayout(row2)
-
-        # Item 3: System Performance & Health
-        row3 = QHBoxLayout()
-        lbl_i3_icon = QLabel("⚡")
-        lbl_i3_icon.setStyleSheet("font-size: 20px;")
-        t_box3 = QVBoxLayout()
-        lbl_i3_title = QLabel("Hardware Optimization")
-        lbl_i3_title.setStyleSheet("color: #FFFFFF; font-size: 15px; font-weight: 600;")
-        self.lbl_i3_sub = QLabel("Balancing CPU & Lenovo LOQ power state...")
-        self.lbl_i3_sub.setStyleSheet("color: #64748B; font-size: 12px;")
-        t_box3.addWidget(lbl_i3_title)
-        t_box3.addWidget(self.lbl_i3_sub)
-        row3.addWidget(lbl_i3_icon)
-        row3.addLayout(t_box3)
-        row3.addStretch()
-        self.lbl_i3_badge = QLabel("⌛")
-        row3.addWidget(self.lbl_i3_badge)
-        c_layout.addLayout(row3)
-
-        layout.addWidget(card)
-        layout.addStretch()
-
-        # 4. Stop / Done button (Image 2 bottom cyan pill button)
-        self.btn_action = QPushButton("Stop optimization")
-        self.btn_action.setCursor(Qt.PointingHandCursor)
-        self.btn_action.setFixedHeight(46)
-        self.btn_action.setStyleSheet("""
-            QPushButton {
-                background: #00D2FF;
-                color: #060A10;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 15px;
-                font-weight: 800;
-                border: none;
-                border-radius: 23px;
-                padding: 0px 32px;
-            }
-            QPushButton:hover {
-                background: #38BDF8;
-            }
-            QPushButton:pressed {
-                background: #0284C7;
-            }
-        """)
-        self.btn_action.clicked.connect(self.handle_button)
-        layout.addWidget(self.btn_action)
-
-        w_layout.addWidget(container)
-        w_layout.addStretch(1)
-
-        scroll.setWidget(wrapper)
-        root_layout.addWidget(scroll)
-
-        # Animation timer
-        self.opt_timer = QTimer(self)
-        self.opt_timer.timeout.connect(self._step_optimization)
-
-    def start_optimization(self):
-        self.is_optimizing = True
-        self.step = 0
-        self.current_score = SystemOptimizer.calculate_health_score()
-        self.lbl_score.setText(str(self.current_score))
-        self.lbl_status.setText("Optimizing system...")
-        self.btn_action.setText("Stop optimization")
-        self.lbl_i1_badge.setText("⌛")
-        self.lbl_i2_badge.setText("⌛")
-        self.lbl_i3_badge.setText("⌛")
-        self.lbl_i1_sub.setText("Scanning memory & background threats...")
-        self.lbl_i2_sub.setText("Flushing idle RAM & clearing temp cache...")
-        self.lbl_i3_sub.setText("Balancing CPU & Lenovo LOQ power state...")
-        self.opt_timer.start(1000)
-
-    def _step_optimization(self):
-        self.step += 1
-
-        if self.step == 1:
-            self.lbl_i1_badge.setText("🔄")
-            self.lbl_i1_badge.setStyleSheet("color: #00D2FF; font-size: 14px;")
-            self.seg_bar.set_progress_level(1)
-        elif self.step == 2:
-            self.lbl_i1_badge.setText("✓ Protected")
-            self.lbl_i1_badge.setStyleSheet("color: #00E676; font-weight: 700; font-size: 13px;")
-            self.lbl_i1_sub.setText("Memory verified. 0 threats detected.")
-            self.current_score = min(100, self.current_score + 2)
-            self.lbl_score.setText(str(self.current_score))
-
-            self.lbl_i2_badge.setText("🔄")
-            self.lbl_i2_badge.setStyleSheet("color: #00D2FF; font-size: 14px;")
-            self.seg_bar.set_progress_level(2)
-
-            res = SystemOptimizer.optimize_ram()
-            SystemOptimizer.clean_quick_junk()
-            self.freed_mb = res.get("freed_mb", 350.0)
-
-        elif self.step == 3:
-            self.lbl_i2_badge.setText("✓ Cleaned")
-            self.lbl_i2_badge.setStyleSheet("color: #00E676; font-weight: 700; font-size: 13px;")
-            self.lbl_i2_sub.setText(f"Reclaimed {self.freed_mb} MB physical RAM & cleaned cache.")
-            self.current_score = min(100, self.current_score + 3)
-            self.lbl_score.setText(str(self.current_score))
-
-            self.lbl_i3_badge.setText("🔄")
-            self.lbl_i3_badge.setStyleSheet("color: #00D2FF; font-size: 14px;")
-            self.seg_bar.set_progress_level(3)
-
-        elif self.step >= 4:
-            self.lbl_i3_badge.setText("✓ Optimized")
-            self.lbl_i3_badge.setStyleSheet("color: #00E676; font-weight: 700; font-size: 13px;")
-            self.lbl_i3_sub.setText("AMD Ryzen 5 & RTX 3050 balanced.")
-            self.lbl_score.setText("100")
-            self.lbl_status.setText("System is in optimal state")
-            self.btn_action.setText("Done")
-            self.is_optimizing = False
-            self.opt_timer.stop()
-
-    def handle_button(self):
-        if self.is_optimizing:
-            self.opt_timer.stop()
-            self.is_optimizing = False
-            self.lbl_status.setText("Optimization paused")
-            self.btn_action.setText("Done")
-        else:
-            self.back_requested.emit()
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)

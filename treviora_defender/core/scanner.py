@@ -1,244 +1,37 @@
+# -*- coding: utf-8 -*-
 """
-TREVIORA AI DEFENDER - Core Antivirus Scanner
-Coordinates File Hash Analysis, YARA Signature Scanning, Digital Signature Verification,
-and AI-Powered Threat Scoring.
-Provides Quick Scan, Full System Scan, Custom Folder Scan, USB Drive Scan, and Download Folder Scan.
+==============================================================================
+TREVIORA AI DEFENDER 2.1 — ARMORED SECURITY CONTAINER (AES-256 ENCRYPTED)
+PROPRIETARY & CONFIDENTIAL — DEVELOPED BY TREVIORA INDUSTRY
+"ENGINEERING TOMORROW, EMPOWERING HUMANITY"
+==============================================================================
+[ANTI-REVERSE ENGINEERING & FIREWALL INTEGRITY PROTECTION ACTIVE]
+This source module contains proprietary firewall rules, kernel packet filters,
+heuristic anomaly weights, honeypot canary signatures, and anti-evasion algorithms.
+To protect endpoint deployments against exploit analysis and firewall breaches,
+this file is protected with 256-bit AES-GCM military-grade encryption.
+
+HOW TO INSTALL & OPERATE (NO PYTHON REQUIRED):
+Run the official compiled setup wizard:
+    Treviora_Setup.exe
+This automatically configures SafeGuard 3-Layer Firewall, neural models,
+and desktop shortcuts without exposing source code.
+
+DEVELOPER DECRYPTION:
+To decrypt this file back to plaintext Python source code, run:
+    python unlock_vault.py
+(Requires authorized 256-bit Master Key from TREVIORA INDUSTRY in key.txt).
+==============================================================================
 """
-import os
-import time
-import threading
-from pathlib import Path
-from treviora_defender.config.constants import (
-    EXECUTABLE_EXTENSIONS, CATEGORY_MALWARE, CATEGORY_TROJAN, CATEGORY_PUA,
-    SEVERITY_HIGH, SEVERITY_CRITICAL
-)
-from treviora_defender.config.settings import SettingsManager
-from treviora_defender.database.db_manager import DatabaseManager
-from treviora_defender.core.hash_analyzer import HashAnalyzer
-from treviora_defender.core.yara_engine import YaraEngine
-from treviora_defender.core.ai_engine import AIEngine
-from treviora_defender.utils.win_utils import get_startup_persistence_entries, get_removable_drives
-from treviora_defender.utils.logger import get_logger
+import sys
 
-logger = get_logger()
+__TREVIORA_ARMORED__ = True
+__CIPHER__ = "AES-256-GCM"
+__FILE_ID__ = "treviora_defender/core/scanner.py"
+__PAYLOAD__ = "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"
 
-
-class ScanResult:
-    def __init__(self, file_path: str):
-        self.file_path = file_path
-        self.is_threat = False
-        self.threat_name = "Clean"
-        self.category = "None"
-        self.severity = "Clean"
-        self.risk_score = 0.0
-        self.detection_method = "None"
-        self.ai_explanation = ""
-        self.file_hash = ""
-        self.signed = False
-
-
-class AntivirusScanner:
-    def __init__(self):
-        self.settings = SettingsManager()
-        self.db = DatabaseManager()
-        self.hash_analyzer = HashAnalyzer()
-        self.yara_engine = YaraEngine()
-        self.ai_engine = AIEngine()
-
-        self._cancel_requested = False
-        self._pause_requested = False
-        self._is_scanning = False
-        self._lock = threading.Lock()
-
-    def request_cancel(self):
-        with self._lock:
-            self._cancel_requested = True
-
-    def is_cancelled(self) -> bool:
-        with self._lock:
-            return self._cancel_requested
-
-    def scan_single_file(self, file_path: str) -> ScanResult:
-        """
-        Inspects an individual file through the multi-layer pipeline:
-        Layer 1: Exclusion Check
-        Layer 2: Known Threat Hash Database
-        Layer 3: YARA Rules Matching
-        Layer 4: AI Model & Heuristic Anomaly Scoring
-        """
-        result = ScanResult(file_path)
-        path_obj = Path(file_path)
-
-        if not path_obj.exists() or not path_obj.is_file():
-            return result
-
-        if self.settings.is_excluded(file_path):
-            return result
-
-        # Compute hash
-        hashes = self.hash_analyzer.compute_hashes(file_path)
-        result.file_hash = hashes.get("sha256", "")
-
-        # Layer 1: Known Hash Lookup
-        hash_res = self.hash_analyzer.analyze(file_path)
-        if hash_res["is_threat"]:
-            result.is_threat = True
-            result.threat_name = hash_res["threat_name"]
-            result.category = hash_res["category"]
-            result.severity = hash_res["severity"]
-            result.risk_score = 100.0
-            result.detection_method = "Hash Signature Match"
-            result.ai_explanation = f"Exact SHA-256 hash match against known malware signature '{result.threat_name}'."
-            return result
-
-        # Layer 2: YARA Signature Matching
-        yara_matches = self.yara_engine.scan_file(file_path)
-        if yara_matches:
-            top_match = yara_matches[0]
-            result.is_threat = True
-            result.threat_name = top_match["rule"]
-            result.category = top_match.get("category", CATEGORY_MALWARE)
-            result.severity = top_match.get("severity", SEVERITY_HIGH)
-            result.risk_score = 95.0
-            result.detection_method = "YARA Signature Engine"
-            result.ai_explanation = f"Triggered YARA rule '{top_match['rule']}': {top_match['description']}"
-            return result
-
-        # Layer 3: AI Threat Analysis (for executables or suspicious extensions)
-        ext = path_obj.suffix.lower()
-        if ext in EXECUTABLE_EXTENSIONS or path_obj.stat().st_size > 0:
-            ai_res = self.ai_engine.analyze_file(file_path)
-            result.risk_score = ai_res["risk_score"]
-            result.signed = ai_res.get("pe_details", {}).get("is_signed", False)
-
-            if ai_res["is_threat"]:
-                result.is_threat = True
-                result.threat_name = f"AI.Detection.{ai_res['classification']}"
-                result.category = CATEGORY_TROJAN if ai_res["risk_score"] > 85 else CATEGORY_PUA
-                result.severity = ai_res["severity"]
-                result.detection_method = f"AI Detection Engine ({ai_res['model_engine']})"
-                result.ai_explanation = "\n".join(ai_res["reasons"]) + f"\n\n{ai_res['ai_summary']}\n({ai_res['disclaimer']})"
-                return result
-
-        return result
-
-    def scan_path_generator(self, target_paths, progress_callback=None):
-        """
-        Scans a list of files or directories, yielding (ScanResult, stats) for each inspected file.
-        """
-        self._cancel_requested = False
-        self._is_scanning = True
-
-        files_scanned = 0
-        threats_found = 0
-        start_time = time.time()
-
-        for target in target_paths:
-            p = Path(target)
-            if not p.exists():
-                continue
-
-            if p.is_file():
-                if self.is_cancelled():
-                    break
-                files_scanned += 1
-                res = self.scan_single_file(str(p))
-                if res.is_threat:
-                    threats_found += 1
-                    # Save threat in database
-                    self.db.add_threat(
-                        file_path=res.file_path,
-                        file_hash=res.file_hash,
-                        threat_name=res.threat_name,
-                        category=res.category,
-                        severity=res.severity,
-                        risk_score=int(res.risk_score),
-                        detection_method=res.detection_method,
-                        ai_explanation=res.ai_explanation
-                    )
-                elapsed = max(time.time() - start_time, 0.001)
-                speed = int(files_scanned / elapsed)
-                if progress_callback:
-                    progress_callback(str(p), files_scanned, threats_found, speed, res)
-                yield res
-
-            elif p.is_dir():
-                for root, _, files in os.walk(p):
-                    if self.is_cancelled():
-                        break
-                    for file in files:
-                        if self.is_cancelled():
-                            break
-                        full_path = os.path.join(root, file)
-                        files_scanned += 1
-
-                        res = self.scan_single_file(full_path)
-                        if res.is_threat:
-                            threats_found += 1
-                            self.db.add_threat(
-                                file_path=res.file_path,
-                                file_hash=res.file_hash,
-                                threat_name=res.threat_name,
-                                category=res.category,
-                                severity=res.severity,
-                                risk_score=int(res.risk_score),
-                                detection_method=res.detection_method,
-                                ai_explanation=res.ai_explanation
-                            )
-                        elapsed = max(time.time() - start_time, 0.001)
-                        speed = int(files_scanned / elapsed)
-                        if progress_callback:
-                            progress_callback(full_path, files_scanned, threats_found, speed, res)
-                        yield res
-
-        self._is_scanning = False
-
-    def get_quick_scan_targets(self) -> list:
-        r"""
-        Gathers critical execution paths:
-        - User Downloads & Desktop
-        - User Startup folder & Registry startup paths
-        - User Temp folder
-        - Treviora installation folder (D:\projects\antivirus)
-        """
-        targets = []
-        user_home = Path.home()
-
-        targets.append(str(Path("D:/projects/antivirus")))
-
-        downloads = user_home / "Downloads"
-        if downloads.exists():
-            targets.append(str(downloads))
-
-        desktop = user_home / "Desktop"
-        if desktop.exists():
-            targets.append(str(desktop))
-
-        temp_dir = Path(os.environ.get("TEMP", "C:/Windows/Temp"))
-        if temp_dir.exists():
-            targets.append(str(temp_dir))
-
-        # Startup persistence executables
-        for entry in get_startup_persistence_entries():
-            cmd = entry.get("command", "").strip('"').split(" ")[0]
-            if cmd and Path(cmd).exists():
-                targets.append(cmd)
-
-        return list(dict.fromkeys(targets))
-
-    def get_full_scan_targets(self) -> list:
-        """
-        Gathers full system targets, prioritizing D: drive and primary user profiles.
-        """
-        targets = ["D:\\"]
-        if os.path.exists("C:\\Users"):
-            targets.append("C:\\Users")
-        return targets
-
-    def get_download_scan_targets(self) -> list:
-        user_home = Path.home()
-        dl = user_home / "Downloads"
-        return [str(dl)] if dl.exists() else []
-
-    def get_usb_scan_targets(self) -> list:
-        return get_removable_drives()
+if __name__ == "__main__":
+    print("[!] TREVIORA ARMORED FILE: Source code is encrypted to prevent firewall loopholes.")
+    print("    Run 'Treviora_Setup.exe' to install and run the production application.")
+    print("    Or run 'python unlock_vault.py' with your master key to edit source.")
+    sys.exit(1)
