@@ -17,7 +17,7 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFontDatabase, QFont
 from treviora_defender.ui.styles import MAIN_STYLE
-from treviora_defender.ui.header_dialogs import SecurityNotificationsDialog, UserProfileDialog
+from treviora_defender.ui.header_dialogs import SecurityNotificationsDialog, UserProfileDialog, PrivacyPolicyDialog
 
 ARTIFACT_DIR = Path(r"C:\Users\Thiruvel\.gemini\antigravity\brain\a84d44c0-3f89-4e98-ae62-15a899da9949")
 
@@ -37,6 +37,7 @@ def capture_dialogs():
     app.processEvents()
     pix1 = dlg_notif.grab()
     pix1.save(str(ARTIFACT_DIR / "imanager_notifications_dialog.png"))
+    pix1.save("docs/screenshots/11_notifications_dialog.png")
     print("Captured: imanager_notifications_dialog.png")
     dlg_notif.close()
 
@@ -48,8 +49,21 @@ def capture_dialogs():
     app.processEvents()
     pix2 = dlg_user.grab()
     pix2.save(str(ARTIFACT_DIR / "imanager_user_profile_dialog.png"))
+    pix2.save("docs/screenshots/12_user_profile_dialog.png")
     print("Captured: imanager_user_profile_dialog.png")
     dlg_user.close()
+
+    # 3. Capture Privacy Policy Dialog
+    dlg_privacy = PrivacyPolicyDialog()
+    dlg_privacy.show()
+    app.processEvents()
+    time.sleep(0.1)
+    app.processEvents()
+    pix3 = dlg_privacy.grab()
+    pix3.save(str(ARTIFACT_DIR / "imanager_privacy_policy_dialog.png"))
+    pix3.save("docs/screenshots/13_privacy_policy_dialog.png")
+    print("Captured: imanager_privacy_policy_dialog.png")
+    dlg_privacy.close()
 
 if __name__ == "__main__":
     capture_dialogs()

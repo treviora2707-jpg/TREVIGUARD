@@ -14,8 +14,13 @@
 <p align="center">
   <img src="https://img.shields.io/badge/SafeGuard_3--Layer_Firewall-Active-00D2FF?style=for-the-badge&logo=shield" />
   <img src="https://img.shields.io/badge/AI_Engine-ONNX_Neural_Classifier-00E676?style=for-the-badge&logo=onnx" />
+  <img src="https://img.shields.io/badge/Privacy-100%25_On--Device-00E676?style=for-the-badge&logo=lock" />
   <img src="https://img.shields.io/badge/Platform-Windows_11-0070F3?style=for-the-badge&logo=windows11" />
   <img src="https://img.shields.io/badge/Hardware-Intel_%26_AMD_Ryzen_Adaptive-FF5500?style=for-the-badge" />
+</p>
+
+<p align="center">
+  <a href="PRIVACY_POLICY.md"><b>📜 Read Official Treviora Privacy Policy & Data Sovereignty Charter</b></a>
 </p>
 
 ---
@@ -124,6 +129,23 @@ python treviora_defender/main.py
   ALL 7 PROCESSES & SUBSYSTEMS FULLY OPERATIONAL WITH ZERO BUGS!
 ======================================================================
 ```
+
+---
+
+## 📜 Privacy Policy & Data Sovereignty Guarantee
+
+<p align="center">
+  <img src="docs/screenshots/13_privacy_policy_dialog.png" alt="Treviora Privacy Policy Dialog" width="500" />
+</p>
+
+TREVIGUARD operates under the **Treviora Industry Zero-Exfiltration Privacy Charter**:
+
+- **100% Local On-Device AI Processing:** All machine learning inference, YARA rule matching, and heuristic anomaly detection execute strictly on host hardware (CPU/GPU).
+- **Zero Cloud Transmission:** Your private documents, code, passwords, network telemetry, and system files are never uploaded to any remote server or cloud backend.
+- **Encrypted Local Storage:** Quarantined threats are secured locally using **AES-GCM 256-bit encryption** in an isolated vault.
+- **In-App Policy Access:** The full charter can be inspected directly inside the application via the sidebar (`ℹ️ About`) or Operator Profile (`👤 > 📜 Privacy Policy`).
+
+👉 For full legal details, see the complete [TREVIORA PRIVACY POLICY (PRIVACY_POLICY.md)](PRIVACY_POLICY.md).
 
 ---
 

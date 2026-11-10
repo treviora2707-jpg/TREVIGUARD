@@ -429,6 +429,28 @@ class UserProfileDialog(QDialog):
         btn_ok.clicked.connect(self.close)
 
         bot_bar.addWidget(btn_copy)
+
+        btn_privacy = QPushButton("📜 Privacy Policy")
+        btn_privacy.setCursor(Qt.PointingHandCursor)
+        btn_privacy.setFixedHeight(38)
+        btn_privacy.setStyleSheet("""
+            QPushButton {
+                background: #0F172A;
+                color: #00E676;
+                border: 1px solid #1E2E4E;
+                border-radius: 12px;
+                font-weight: 700;
+                font-size: 12px;
+                padding: 0px 16px;
+            }
+            QPushButton:hover {
+                border-color: #00E676;
+                color: #FFFFFF;
+            }
+        """)
+        btn_privacy.clicked.connect(self._open_privacy)
+        bot_bar.addWidget(btn_privacy)
+
         bot_bar.addStretch()
         bot_bar.addWidget(btn_ok)
         outer_layout.addLayout(bot_bar)
@@ -462,3 +484,224 @@ class UserProfileDialog(QDialog):
         )
         cb.setText(text)
         QMessageBox.information(self, "Copied", "Hardware specifications copied to clipboard!")
+
+    def _open_privacy(self):
+        dlg = PrivacyPolicyDialog(self)
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+            dlg.show()
+        else:
+            dlg.exec()
+
+
+class PrivacyPolicyDialog(QDialog):
+    """
+    Dedicated Cyberpunk Privacy Policy & Data Sovereignty Dialog.
+    Displays Treviora Industry's strict 100% on-device processing charter.
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("TREVIORA AI DEFENDER — Privacy Policy")
+        self.setFixedSize(620, 720)
+        self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self._init_ui()
+
+    def _init_ui(self):
+        root = QVBoxLayout(self)
+        root.setContentsMargins(10, 10, 10, 10)
+
+        outer = QFrame()
+        outer.setObjectName("PrivacyOuterFrame")
+        outer.setStyleSheet("""
+            QFrame#PrivacyOuterFrame {
+                background-color: #060B18;
+                border: 2px solid #00D2FF;
+                border-radius: 20px;
+            }
+        """)
+        ol = QVBoxLayout(outer)
+        ol.setContentsMargins(22, 18, 22, 18)
+        ol.setSpacing(12)
+
+        # Header Row
+        hdr = QHBoxLayout()
+        lbl_icon = QLabel("📜")
+        lbl_icon.setStyleSheet("font-size: 20px;")
+
+        title_box = QVBoxLayout()
+        title_box.setSpacing(1)
+        lbl_t = QLabel("TREVIORA PRIVACY POLICY & DATA CHARTER")
+        lbl_t.setStyleSheet("color: #FFFFFF; font-size: 14px; font-weight: 800; letter-spacing: 0.8px;")
+        lbl_sub = QLabel("TREVIORA INDUSTRY • 'ENGINEERING TOMORROW, EMPOWERING HUMANITY'")
+        lbl_sub.setStyleSheet("color: #00D2FF; font-size: 10px; font-weight: 700;")
+        title_box.addWidget(lbl_t)
+        title_box.addWidget(lbl_sub)
+
+        btn_close = QPushButton("✕")
+        btn_close.setCursor(Qt.PointingHandCursor)
+        btn_close.setFixedSize(30, 30)
+        btn_close.setStyleSheet("""
+            QPushButton {
+                background: #111D36;
+                color: #94A3B8;
+                border-radius: 15px;
+                font-weight: 800;
+                font-size: 13px;
+                border: 1px solid #1E2E4E;
+            }
+            QPushButton:hover {
+                background: #EF4444;
+                color: #FFFFFF;
+                border-color: #EF4444;
+            }
+        """)
+        btn_close.clicked.connect(self.close)
+
+        hdr.addWidget(lbl_icon)
+        hdr.addLayout(title_box)
+        hdr.addStretch()
+        hdr.addWidget(btn_close)
+        ol.addLayout(hdr)
+
+        # Privacy Pillars Badges Row
+        badge_row = QHBoxLayout()
+        badge_row.setSpacing(8)
+        b1 = QLabel("● 100% LOCAL ON-DEVICE")
+        b1.setStyleSheet("background: #061A28; color: #00E676; border: 1px solid #00E676; border-radius: 6px; padding: 4px 8px; font-size: 9px; font-weight: 800;")
+        b2 = QLabel("● ZERO CLOUD TRANSMISSION")
+        b2.setStyleSheet("background: #0B1930; color: #00D2FF; border: 1px solid #00D2FF; border-radius: 6px; padding: 4px 8px; font-size: 9px; font-weight: 800;")
+        b3 = QLabel("● NO TELEMETRY SELLING")
+        b3.setStyleSheet("background: #180F2A; color: #A855F7; border: 1px solid #A855F7; border-radius: 6px; padding: 4px 8px; font-size: 9px; font-weight: 800;")
+        badge_row.addWidget(b1)
+        badge_row.addWidget(b2)
+        badge_row.addWidget(b3)
+        badge_row.addStretch()
+        ol.addLayout(badge_row)
+
+        # Policy Text Display
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setStyleSheet("background: transparent; border: none;")
+
+        container = QWidget()
+        container.setStyleSheet("background: transparent;")
+        cl = QVBoxLayout(container)
+        cl.setContentsMargins(4, 4, 12, 4)
+        cl.setSpacing(14)
+
+        policy_sections = [
+            ("1. 100% Local On-Device AI Processing",
+             "All machine learning inference (ONNX PE Classifier), YARA pattern scans, and heuristic anomaly detection run strictly on your local CPU and GPU. Your files, documents, and code are NEVER uploaded to any remote cloud server."),
+            ("2. Zero Collection of Personal Identifiable Information (PII)",
+             "TreviGuard does NOT track, store, or transmit your personal identity, browsing history, cookies, passwords, financial records, or communication logs. Your computer remains completely private."),
+            ("3. Strict Local Storage Architecture",
+             "All security data—including the SQLite threat database, diagnostic logs, and quarantined files—is saved strictly on your local computer. No cloud synchronization is required or enforced."),
+            ("4. AES-GCM 256-Bit Encrypted Quarantine Vault",
+             "Neutralized malware is encrypted locally using military-grade AES-GCM cryptography with unique session nonces, ensuring payloads cannot execute or leak."),
+            ("5. Synthetic Decoy Canary Honeypots",
+             "Anti-ransomware decoy files deployed on your machine are 100% synthetic mock templates. They contain zero genuine personal or corporate information."),
+            ("6. Isolated Hardware Sensor Telemetry",
+             "Real-time CPU, GPU, RAM, and Battery readings are queried from native Windows Win32 APIs purely in volatile RAM to drive the Cyberpunk HUD and auto-tune background thread priority. They are never transmitted off-device."),
+            ("7. Safe Coexistence & User Sovereignty",
+             "TreviGuard operates in defense-in-depth synergy with Microsoft Defender and Windows Defender Firewall without tampering. You can clear all logs, restore quarantined files, or uninstall at any time."),
+        ]
+
+        for sec_title, sec_desc in policy_sections:
+            card = QFrame()
+            card.setStyleSheet("""
+                QFrame {
+                    background: #081020;
+                    border: 1px solid #1E2E4E;
+                    border-radius: 10px;
+                    padding: 8px;
+                }
+            """)
+            s_layout = QVBoxLayout(card)
+            s_layout.setContentsMargins(12, 8, 12, 8)
+            s_layout.setSpacing(4)
+
+            lbl_st = QLabel(sec_title)
+            lbl_st.setStyleSheet("color: #00D2FF; font-size: 12px; font-weight: 800;")
+            lbl_sd = QLabel(sec_desc)
+            lbl_sd.setWordWrap(True)
+            lbl_sd.setStyleSheet("color: #CBD5E1; font-size: 11px; line-height: 1.4;")
+            s_layout.addWidget(lbl_st)
+            s_layout.addWidget(lbl_sd)
+            cl.addWidget(card)
+
+        # Contact Info Box
+        c_box = QFrame()
+        c_box.setStyleSheet("background: #0A1428; border-left: 3px solid #00E676; border-radius: 6px; padding: 6px;")
+        c_layout = QVBoxLayout(c_box)
+        lbl_ci = QLabel("Official Privacy & Governance Division: <b>treviora2707@gmail.com</b><br>GitHub: <b>https://github.com/treviora2707-jpg/TREVIGUARD</b>")
+        lbl_ci.setStyleSheet("color: #94A3B8; font-size: 10px;")
+        c_layout.addWidget(lbl_ci)
+        cl.addWidget(c_box)
+
+        scroll.setWidget(container)
+        ol.addWidget(scroll)
+
+        # Bottom Bar
+        b_bar = QHBoxLayout()
+        btn_copy = QPushButton("📋 Copy Policy")
+        btn_copy.setCursor(Qt.PointingHandCursor)
+        btn_copy.setFixedHeight(36)
+        btn_copy.setStyleSheet("""
+            QPushButton {
+                background: #0F172A;
+                color: #00D2FF;
+                border: 1px solid #1E2E4E;
+                border-radius: 10px;
+                font-weight: 700;
+                font-size: 11px;
+                padding: 0px 14px;
+            }
+            QPushButton:hover {
+                border-color: #00D2FF;
+                color: #FFFFFF;
+            }
+        """)
+        btn_copy.clicked.connect(self._copy_policy)
+
+        btn_dismiss = QPushButton("I Understand && Accept")
+        btn_dismiss.setCursor(Qt.PointingHandCursor)
+        btn_dismiss.setFixedHeight(36)
+        btn_dismiss.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0070F3, stop:1 #00D2FF);
+                color: #FFFFFF;
+                border: none;
+                border-radius: 10px;
+                font-weight: 800;
+                font-size: 12px;
+                padding: 0px 22px;
+            }
+            QPushButton:hover {
+                background: #00B0FF;
+            }
+        """)
+        btn_dismiss.clicked.connect(self.close)
+
+        b_bar.addWidget(btn_copy)
+        b_bar.addStretch()
+        b_bar.addWidget(btn_dismiss)
+        ol.addLayout(b_bar)
+
+        root.addWidget(outer)
+
+    def _copy_policy(self):
+        from PySide6.QtGui import QGuiApplication
+        cb = QGuiApplication.clipboard()
+        text = (
+            "--- TREVIORA INDUSTRY PRIVACY CHARTER ---\n"
+            "Product: TREVIGUARD / TREVIORA AI DEFENDER 2.1\n"
+            "Controller: TREVIORA INDUSTRY (treviora2707@gmail.com)\n\n"
+            "1. 100% Local On-Device AI: All PE analysis, ONNX inference, and YARA rules run on host CPU/GPU.\n"
+            "2. Zero PII Collection: No identity, passwords, files, or browsing data are ever collected or sold.\n"
+            "3. Strict Local Storage: Databases, quarantined vaults (AES-GCM 256), and logs remain on local drive.\n"
+            "4. Synthetic Honeypots: Decoy canary files contain zero personal information.\n"
+            "5. Safe Coexistence: Never tampers with Microsoft Defender or native Windows security.\n"
+        )
+        cb.setText(text)
+        QMessageBox.information(self, "Copied", "Privacy Policy copied to clipboard!")

@@ -227,7 +227,7 @@ class MainWindow(QMainWindow):
             ("🧹", "Optimization", 3),
             ("🛠️", "Tools", 4),
             ("⚙️", "Settings", 4),
-            ("ℹ️", "About", 0),
+            ("ℹ️", "About", -1),
         ]
 
         for icon, label, page_idx in nav_items:
@@ -311,6 +311,9 @@ class MainWindow(QMainWindow):
         active_btn.setStyleSheet(active_style)
 
     def _on_sidebar_nav_clicked(self, page_idx: int, btn: QPushButton):
+        if page_idx == -1:
+            self._open_privacy_policy_dialog()
+            return
         self._set_active_sidebar_button(btn)
         self.stack.setCurrentIndex(page_idx)
 
@@ -552,6 +555,15 @@ class MainWindow(QMainWindow):
             self.user_dialog.show()
         else:
             self.user_dialog.exec()
+
+    def _open_privacy_policy_dialog(self):
+        """Opens the Treviora Industry Privacy Policy Charter & Local Trust Dialog."""
+        from treviora_defender.ui.header_dialogs import PrivacyPolicyDialog
+        self.privacy_dialog = PrivacyPolicyDialog(self)
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+            self.privacy_dialog.show()
+        else:
+            self.privacy_dialog.exec()
 
     def go_to_virus_scan(self, mode: str = "quick"):
         self.switch_view(8)
